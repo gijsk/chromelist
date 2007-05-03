@@ -1,0 +1,31 @@
+@import "chrome://global/skin/";
+
+tree {
+  margin: .5em;
+}
+
+textbox,
+textbox > .textbox-internal-box,
+textbox > .textarea-internal-box {
+  background: transparent !important;
+  border: none;
+  padding: 0px;
+  -moz-appearance: none;
+}
+
+textbox.header {
+  -moz-margin-start: 0;
+}
+
+#thepreviewimage {
+  margin: 1em;
+}
+
+.fixedsize {
+  height: 8.5em;
+}
+
+textbox[disabled] {
+  font-style: italic;
+}
+

@@ -1,0 +1,52 @@
+﻿<!-- window stuff -->
+<!ENTITY     window.title                   "Chrome Browser">
+
+<!-- tree stuff -->
+<!ENTITY     tree.filetree.filesize         "File Size">
+<!ENTITY     tree.filetree.filetype         "File Type">
+<!ENTITY     tree.filetree.filename         "File Name">
+
+<!-- Context menu stuff -->
+<!ENTITY     cx.open                        "Open">
+<!ENTITY     cx.open.tab                    "In a New Tab">
+<!ENTITY     cx.open.tab.accesskey          "T">
+<!ENTITY     cx.open.window                 "in a New Window">
+<!ENTITY     cx.open.window.accesskey       "W">
+<!ENTITY     cx.open.current                "Open in Current Window/Tab">
+<!ENTITY     cx.open.current.accesskey      "C">
+<!ENTITY     cx.view-source                 "View Source">
+<!ENTITY     cx.view-source.accesskey       "S">
+
+<!ENTITY     cx.copy                        "Copy">
+<!ENTITY     cx.copy.chrome                 "Chrome URL">
+<!ENTITY     cx.copy.chrome.accesskey       "C">
+<!ENTITY     cx.copy.jarurl                 "JAR URL">
+<!ENTITY     cx.copy.jarurl.accesskey       "J">
+<!ENTITY     cx.copy.jarpath                "JARFile Path">
+<!ENTITY     cx.copy.jarpath.accesskey      "P">
+<!ENTITY     cx.copy.fileurl                "File URL">
+<!ENTITY     cx.copy.fileurl.accesskey      "F">
+<!ENTITY     cx.copy.filepath               "File Path">
+<!ENTITY     cx.copy.filepath.accesskey     "P">
+<!-- <!ENTITY     cx.copy.content                "File Contents">
+<!ENTITY     cx.copy.contentdata            "File Contents as Data URI"> -->
+
+
+<!ENTITY     cx.properties                  "Properties...">
+<!ENTITY     cx.properties.accesskey        "P">
+<!ENTITY     cx.save-as                     "Save As...">
+<!ENTITY     cx.save-as.accesskey           "A">
+<!ENTITY     cx.lxr                         "Find file in LXR">
+<!ENTITY     cx.lxr.accesskey               "L">
+
+
+<!-- Properties dialog stuff -->
+<!ENTITY     props.caption                  "Properties of ">
+<!ENTITY     props.header.label             "File Properties">
+<!ENTITY     props.chrome-url.label         "Chrome URL">
+<!ENTITY     props.resolved-url.label       "Resolved URL">
+<!ENTITY     props.resolved-file.label      "File Path">
+<!ENTITY     props.resolved-jarfile.label   "JARFile Path">
+<!ENTITY     props.manifest.label           "Package Manifest">
+<!ENTITY     props.file-size.label          "File Size">
+

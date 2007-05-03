@@ -1,0 +1,4 @@
+content   chromelist                                content/
+skin      chromelist       modern/1.0               skin/
+locale    chromelist       en-US                    locale/
+overlay   chrome://browser/content/browser.xul      chrome://chromelist/content/ChromeListOverlay.xul

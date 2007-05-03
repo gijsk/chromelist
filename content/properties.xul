@@ -1,0 +1,64 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet href="chrome://chromelist/skin/properties.css" type="text/css"?>
+<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
+
+<!DOCTYPE window SYSTEM "chrome://chromelist/locale/chromelist.dtd" >
+
+<window id="metadata"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        title="&props.caption;"
+        onload="onLoad()"
+        class="dialog"
+        style="width: 60em; height: 10em;"
+        persist="screenX screenY width height"
+        orient="vertical"
+        screenX="24" screenY="24">
+
+  <script type="application/x-javascript" src="chrome://chromelist/content/properties.js"></script>
+
+  <keyset id="dialogKeys"/>
+
+  <label value="&props.header.label;"/>
+  <separator class="groove"/>
+  <grid>
+    <columns>
+      <column/>
+      <column/>
+      <column flex="1"/>
+    </columns>
+    <rows>
+      <row id="chrome-url">
+        <separator orient="vertical"/>
+        <label value="&props.chrome-url.label; "/>
+        <textbox readonly="true" id="chrome-url-text"/>
+      </row>
+      <row id="resolved-url">
+        <separator orient="vertical"/>
+        <label value="&props.resolved-url.label; "/>
+        <textbox readonly="true" id="resolved-url-text"/>
+      </row>
+      <row id="resolved-file">
+        <separator orient="vertical"/>
+        <label value="&props.resolved-file.label; "/>
+        <textbox readonly="true" id="resolved-file-text"/>
+      </row>
+      <row id="resolved-jarfile">
+        <separator orient="vertical"/>
+        <label value="&props.resolved-jarfile.label; "/>
+        <textbox readonly="true" id="resolved-jarfile-text"/>
+      </row>
+      <row id="file-size">
+        <separator orient="vertical"/>
+        <label value="&props.file-size.label; "/>
+        <textbox readonly="true" id="file-size-text"/>
+      </row>
+      <row id="manifest">
+        <separator orient="vertical"/>
+        <label value="&props.manifest.label; "/>
+        <textbox readonly="true" id="manifest-text"/>
+      </row>
+    </rows>
+  </grid>
+  <separator/>
+</window>
+

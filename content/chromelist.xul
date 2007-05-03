@@ -1,0 +1,107 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+<?xml-stylesheet href="chrome://chromelist/skin/tree.css" type="text/css"?>
+<!DOCTYPE window SYSTEM "chrome://chromelist/locale/chromelist.dtd">
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        title="&window.title;"
+        id="chrome-browser-window"
+        orient="vertical"
+        onload="setTimeout('onLoad()', 10)"
+        onunload="onUnload()"
+        width="640"
+        height="480"
+        persist="width height screenX screenY sizemode">
+        <script type="application/x-javascript" src="chrome://chromelist/content/file-utils.js"></script>
+        <script type="application/x-javascript" src="chrome://chromelist/content/utils.js"></script>
+        <script type="application/x-javascript" src="chrome://browser/content/utilityOverlay.js"></script>
+        <script type="application/x-javascript" src="chrome://global/content/contentAreaUtils.js"></script>
+        <script type="application/x-javascript" src="chrome://chromelist/content/chromelist.js"></script>
+        <script type="application/x-javascript" src="chrome://chromelist/content/chromeStruct.js"></script>
+        <script type="application/x-javascript" src="chrome://chromelist/content/chromeDirTree.js"></script>
+        <script type="application/x-javascript" src="chrome://chromelist/content/chromeTree.js"></script>
+        <stringbundleset>
+          <stringbundle id="locale-strings" src="chrome://chromelist/locale/chromelist.properties"/>
+        </stringbundleset>
+
+        <hbox width="1" flex="1">
+          <tree id="chromedirtree" class="plain" flex="1" hidecolumnpicker="true"
+                persist="collapsed">
+            <treecols>
+              <treecol id="chromedirname" hideheader="true" flex="1"
+                       primary="true" persist="width ordinal hidden"/>
+            </treecols>
+            <treechildren id="chromedirtreechildren"
+                          class="dirTree"
+                          onclick="chromeDirTree.click(event)"/>
+          </tree>
+          <splitter id="chromesplitter" style="width: 4px; max-width: 4px;"
+                    persist="state" collapse="before">
+            <grippy/>
+          </splitter>
+          <tree id="chrometree" class="plain" flex="2" seltype="single"
+                enableColumnDrag="true" context="chromemenu">
+            <treecols>
+              <treecol  id="chromefilename" sortDirection="descending"
+                        label="&tree.filetree.filename;" flex="3" 
+                        persist="width ordinal hidden sortDirection"/>
+              <splitter class="tree-splitter"/>
+              <treecol  id="chromefilesize" style="text-align:right"
+                        label="&tree.filetree.filesize;" flex="1"
+                        persist="width ordinal hidden sortDirection"/>
+              <splitter class="tree-splitter"/>
+              <treecol  id="chromefiletype" label="&tree.filetree.filetype;"
+                        persist="width ordinal hidden sortDirection" flex="1"/>
+            </treecols>
+            <treechildren id="chromefiletreechildren" class="fileTree"
+                          ondblclick="chromeTree.dblClick(event);" />
+          </tree>
+        </hbox>
+        <statusbar id="status-bar" class="chromeclass-status">
+            <statusbarpanel id="status-text" crop="right" flex="1"/>
+            <statusbarpanel class="statusbarpanel-progress" id="status-progress-panel">
+            <progressmeter class="progressmeter-statusbar" id="status-progress-bar" 
+                           mode="determined" value="0"/>
+            </statusbarpanel>
+        </statusbar>
+
+        <popup id="chromemenu" onpopupshowing="return chromeTree.popupShowing(event);">
+          <menu id="cx-open" label="&cx.open;">
+            <menupopup>
+              <menuitem id="cx-opencurrent" label="&cx.open.current;" accesskey="&cx.open.current.accesskey;"
+                        oncommand="chromeBrowser.viewInCurrent(chromeTree.getCurrentHref());"/>
+              <menuitem id="cx-opentab" label="&cx.open.tab;" accesskey="&cx.open.tab.accesskey;"
+                        oncommand="chromeBrowser.viewInTab(chromeTree.getCurrentHref());"/>
+              <menuitem id="cx-openwindow" label="&cx.open.window;" accesskey="&cx.open.window.accesskey;"
+                        oncommand="chromeBrowser.viewInWindow(chromeTree.getCurrentHref());"/>
+              <menuseparator/>
+              <menuitem id="cx-view-source" label="&cx.view-source;" accesskey="&cx.view-source.accesskey;"
+                        oncommand="chromeBrowser.viewSourceOf(chromeTree.getCurrentHref());"/>
+            </menupopup>
+          </menu>
+          <menu id="cx-copy" label="&cx.copy;">
+            <menupopup>
+              <menuitem id="cx-copychromeurl" label="&cx.copy.chrome;" accesskey="&cx.copy.chrome.accesskey;"
+                        oncommand="chromeBrowser.copy(chromeTree.getCurrentItem(), 'href')"/>
+              <menuitem id="cx-copyjarurl" label="&cx.copy.jarurl;" accesskey="&cx.copy.jarurl.accesskey;"
+                        oncommand="chromeBrowser.copy(chromeTree.getCurrentItem(), 'resolvedURI')"/>
+              <menuitem id="cx-copyjarpath" label="&cx.copy.jarpath;" accesskey="&cx.copy.jarpath.accesskey;"
+                        oncommand="chromeBrowser.copy(chromeTree.getCurrentItem(), 'path')"/>
+              <menuitem id="cx-copyfileurl" label="&cx.copy.fileurl;" accesskey="&cx.copy.fileurl.accesskey;"
+                        oncommand="chromeBrowser.copy(chromeTree.getCurrentItem(), 'resolvedURI')"/>
+              <menuitem id="cx-copyfilepath" label="&cx.copy.filepath;" accesskey="&cx.copy.filepath.accesskey;"
+                        oncommand="chromeBrowser.copy(chromeTree.getCurrentItem(), 'path')"/>
+<!--              <menuseparator/>
+              <menuitem id="cx-copycontent" label="&cx.copy.content;" accesskey="&cx.copy.content.accesskey;"/>
+              <menuitem id="cx-copycontentdata" label="&cx.copy.contentdata;" accesskey="&cx.copy.contentdata.accesskey;"/> -->
+            </menupopup>
+          </menu>
+          <menuitem id="cx-lxr" label="&cx.lxr;" accesskey="&cx.lxr.accesskey;"
+                    oncommand="chromeBrowser.lxr(chromeTree.getCurrentItem());"/>
+          <menuseparator/>
+          <menuitem id="cx-saveas" label="&cx.save-as;" accesskey="&cx.save-as.accesskey;"
+                    oncommand="chromeBrowser.saveAs(chromeTree.getCurrentHref());"/>
+          <menuitem id="cx-properties" label="&cx.properties;" accesskey="&cx.properties.accesskey;"
+                    oncommand="chromeBrowser.showProperties(chromeTree.getCurrentItem());"/>
+
+        </popup>
+</window>
