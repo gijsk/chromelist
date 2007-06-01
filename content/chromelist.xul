@@ -1,6 +1,5 @@
 ﻿<?xml version="1.0" encoding="UTF-8"?>
-<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
-<?xml-stylesheet href="chrome://chromelist/skin/tree.css" type="text/css"?>
+<?xml-stylesheet href="chrome://chromelist/skin/" type="text/css"?>
 <!DOCTYPE window SYSTEM "chrome://chromelist/locale/chromelist.dtd">
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         title="&window.title;"
@@ -55,6 +54,14 @@
             <treechildren id="chromefiletreechildren" class="fileTree"
                           ondblclick="chromeTree.dblClick(event);" />
           </tree>
+        </hbox>
+        <hbox>
+            <toolbarbutton id="close-button" label="&btn.close;"
+                           accesskey="&btn.close.accesskey;" disabled="false"
+                           oncommand="chromeBrowser.close()"/>
+            <toolbarbutton id="problem-button" label="&btn.problems;"
+                           accesskey="&btn.problems.accesskey;" disabled="true"
+                           oncommand="chromeBrowser.showProblems()"/>
         </hbox>
         <statusbar id="status-bar" class="chromeclass-status">
             <statusbarpanel id="status-text" crop="right" flex="1"/>

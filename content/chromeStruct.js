@@ -1,37 +1,10 @@
-var chromeStructure;
-var iosvc, chromeReg;
+var chromeStructure, chromeOverrides;
+var iosvc, chromeReg, consoleService;
 
-function findChromeURL(url)
-{
-    function getUriParticle()
-    {
-        var ary = url.match(/^([^\/]+)\/?(.*)$/);
-        if (ary)
-        {
-            url = ary[2]; 
-            return ary[1];
-        }
-        url = "";
-        return "";
-    };
-    url = url.replace("chrome://", ""); // Remove chrome://
-    var base = getUriParticle();
-    if (!base)
-        return keys(chromeStructure.directories);
-    var ptype = getUriParticle();
-    if (!ptype)
-        return keys(chromeStructure.directories[base].directories);
-    var currentDir = chromeStructure.directories[base].directories[ptype];
-    var thisDirStr = "";
-    while (url != "")
-    {
-        thisDirStr = getUriParticle();
-        if (url == "" && (thisDirStr in currentDir.files)) // Last bit may be a file.
-            return [];
-        currentDir = currentDir.directories[thisDirStr];
-    }
-    return keys(currentDir.directories).concat(keys(currentDir.files));
-}
+const nsIJARURI = Components.interfaces.nsIJARURI;
+const nsIFileURL = Components.interfaces.nsIFileURL;
+const nsIZipReader = Components.interfaces.nsIZipReader;
+const nsIZipEntry = Components.interfaces.nsIZipEntry;
 
 // Maps the chrome's structure.
 // This code probably looks strange. Why not a simple for loop, you wonder?
@@ -43,6 +16,7 @@ function refreshChromeList(callback)
 {
     chromeStructure = null;
     chromeStructure = new ChromeStructure();
+    chromeOverrides = [];
     var f, contents;
     var chromeURLs = [];
 
@@ -71,11 +45,11 @@ function refreshChromeList(callback)
         if (currentManifest < numberOfManifests)
             setTimeout(doParseManifest, 0);
         else
-            setTimeout(makeChromeTree, 0, chromeURLs, callback);
+            setTimeout(makeChromeTree, 0, chromeURLs, updateOverrides, callback);
     };
 }
 
-function makeChromeTree(chromeURLs, callback)
+function makeChromeTree(chromeURLs, callback, callbackParam)
 {
     var currentIndex = 0;
     var numberOfURLs = chromeURLs.length;
@@ -91,11 +65,17 @@ function makeChromeTree(chromeURLs, callback)
             if (currentIndex < numberOfURLs)
                 setTimeout(doProcessChromeURL, 0);
             else
-                setTimeout(callback, 0);
+                setTimeout(callback, 0, callbackParam);
         };
 
         var localURI, chromeURI;
-        var pname, ptype, m, chromeDir;
+        var pname, ptype, m, manifest, chromeDir, desc, prob;
+
+        // Make base and package.
+        m = chromeURLs[currentIndex][0].match(/^chrome\:\/\/([^\/]+)\/([^\/]+)/i);
+        pname = m[1]; // Packagename
+        ptype = m[2]; // Packagetype
+        manifest = chromeURLs[currentIndex][1];
         try
         {
             chromeURI = iosvc.newURI(chromeURLs[currentIndex][0], null, null);
@@ -103,44 +83,37 @@ function makeChromeTree(chromeURLs, callback)
         }
         catch (ex)
         {
+            desc = getStr("problem.convertChromeURL.failure",[ptype, pname]);
+            prob = {desc: desc, manifest: manifest, severity: "error"};
+            chromeBrowser.addProblem(prob);
             gotoNextURL();
             return;
         }
-        // Make base and package, if necessary. Only do that if we could
-        // map the URI to a local place, otherwise it may not have been used
-        // due to app or version conflicts.
-        m = chromeURLs[currentIndex][0].match(/^chrome\:\/\/([^\/]+)\/([^\/]+)/i);
-        pname = m[1]; // Packagename
-        ptype = m[2]; // Packagetype
 
-        if (!(pname in chromeStructure.directories))
-            chromeStructure.directories[pname] = new ChromeDirectory(chromeStructure, pname);
 
-        if (!(ptype in chromeStructure.directories[pname].directories))
-        {
-            chromeDir = new ChromeDirectory(chromeStructure.directories[pname],
-                                            ptype, chromeURLs[currentIndex][1]);
-            chromeStructure.directories[pname].directories[ptype] = chromeDir;
-        }
-
-        // Now we have directory which contains these files/this file.
-        var cD = chromeStructure.directories[pname].directories[ptype];
         if (localURI.scheme == "file")
-            addFileSubs(localURI, cD);
+        {
+            addFileSubs(localURI, ptype, pname, manifest);
+        }
         else if (localURI.scheme == "jar")
-            addJarSubs(localURI, cD);
+        {
+            addJarSubs(localURI, ptype, pname, manifest);
+        }
+        else
+        {
+            desc = getStr("problem.unrecognized.url", [localURI.spec, ptype, pname]);
+            prob = {desc: desc, manifest: manifest, severity: "error"};
+            chromeBrowser.addProblem(prob);
+        }
         gotoNextURL();
     };
 
     doProcessChromeURL();
 }
 
-function addJarSubs(uri, chromeDir)
+function addJarSubs(uri, provider, pack, manifest)
 {
-    const nsIJARURI = Components.interfaces.nsIJARURI;
-    const nsIFileURL = Components.interfaces.nsIFileURL;
-    const nsIZipReader = Components.interfaces.nsIZipReader;
-    const nsIZipEntry = Components.interfaces.nsIZipEntry;
+    var prob;
     var jarURI = uri.QueryInterface(nsIJARURI);
     var jarFileURL = jarURI.JARFile.QueryInterface(nsIFileURL);
     var zr = newObject("@mozilla.org/libjar/zip-reader;1", nsIZipReader);
@@ -159,17 +132,28 @@ function addJarSubs(uri, chromeDir)
     }
     catch (ex)
     {
+        if (!jarFileURL.file || !jarFileURL.file.exists())
+        {
+            prob = {desc: getStr("problem.noJarFile",
+                                 [provider, pack, jarFileURL.spec]),
+                    manifest: manifest,
+                    severity: "error"};
+            chromeBrowser.addProblem(prob);
+        }
         logException(ex);
         return;
     }
+
     var relativeDir = jarURI.directory;
     relativeDir = (/^\//).test(relativeDir) ? relativeDir.substr(1) : relativeDir;
     
     var entries = zr.findEntries(relativeDir + "*");
+    var cDir = null;
     //XXXgijs: more API changes. Not fun.
     while ((("hasMoreElements" in entries) && entries.hasMoreElements()) ||
            (("hasMore" in entries) && entries.hasMore()))
     {
+        cDir = getProviderDir(pack, provider, manifest);
         var entry;
         // Still more API changes:
         var strEntry = entries.getNext();
@@ -184,9 +168,7 @@ function addJarSubs(uri, chromeDir)
             entry = entry.QueryInterface(nsIZipEntry);
             strEntry = entry.name;
         }
-        
 
-        
         var relEntry = strEntry.replace(new RegExp("^" + relativeDir), "");
         // Don't add this if it's a directory or 'nothing' (current directory)
         if (relEntry == "" || (/\/$/).test(relEntry))
@@ -198,20 +180,28 @@ function addJarSubs(uri, chromeDir)
         catch (ex) { var size = 0; }
         // Add this entry with the correct size. Don't pass directories, they'll be
         // created on an as-necessary basis.
-        chromeDir.addRelativeURL(relEntry, size);
+        cDir.addRelativeURL(relEntry, size);
     }
-
+    
+    if (!cDir)
+    {
+        desc = getStr("problem.fileNotInJar", [provider, pack, jarFileURL.file.path]);
+        prob = {desc: desc, manifest: manifest, severity: "error"};
+        chromeBrowser.addProblem(prob);
+    }
 }
 
-function addFileSubs(uri, chromeDir)
+function addFileSubs(uri, provider, pack, manifest)
 {
-    function parseLocalDir(entries, cDir)
+    function parseLocalDir(entries, cDir, dirPath)
     {
         var entry, filename, size, subdir;
+        var addedSomething = false;
         while (entries.hasMoreElements())
         {
             entry = entries.getNext().QueryInterface(nsIFile);
             filename = entry.leafName;
+            addedSomething = true;
             // Try to get a normal filesize, but for all we know this may fail.
             try
             {
@@ -225,10 +215,16 @@ function addFileSubs(uri, chromeDir)
             }
             else
             {
-                subdir = new ChromeDirectory(cDir, filename);
+                subdir = new ChromeDirectory(cDir, filename, manifest);
                 cDir.directories[filename] = subdir;
-                parseLocalDir(entry.directoryEntries, subdir);
+                parseLocalDir(entry.directoryEntries, subdir, entry.path);
             }
+        }
+        if (!addedSomething && (cDir.level == 2))
+        {
+            desc = getStr("problem.mappedToEmptyDir", [provider, pack, dirPath]);
+            prob = {desc: desc, manifest: manifest, severity: "warning"};
+            chromeBrowser.addProblem(prob);
         }
     };
 
@@ -236,9 +232,47 @@ function addFileSubs(uri, chromeDir)
     const nsIFile = Components.interfaces.nsIFile;
     var file = uri.QueryInterface(nsIFileURL).file;
     var dir = file.parent; // We're still looking at the magic file.
-    if (dir && dir.exists() && dir.isDirectory())
-        parseLocalDir(dir.directoryEntries, chromeDir);
+    if (!dir)
+        return;
 
+    var prob, desc;
+
+    if (!dir.exists())
+    {
+        desc = getStr("problem.noFile", [provider, pack, dir.path]);
+        prob = {desc: desc, manifest: manifest, severity: "error"};
+        chromeBrowser.addProblem(prob);
+    }
+    else if (!dir.isDirectory())
+    {
+        desc = getStr("problem.mappedToFile", [provider, pack, dir.path]);
+        prob = {desc: desc, manifest: manifest, severity: "error"};
+        chromeBrowser.addProblem(prob);
+    }
+    else
+    {
+        var chromeDir = getProviderDir(pack, provider, manifest);
+        parseLocalDir(dir.directoryEntries, chromeDir, dir.path);
+    }
+}
+
+function getProviderDir(packageName, providerType, manifest)
+{
+    var dir;
+    if (!(packageName in chromeStructure.directories))
+    {
+        dir = new ChromeDirectory(chromeStructure, packageName, manifest);
+        chromeStructure.directories[packageName] = dir;
+    }
+
+    if (!(providerType in chromeStructure.directories[packageName].directories))
+    {
+        dir = new ChromeDirectory(chromeStructure.directories[packageName],
+                                  providerType, manifest);
+        chromeStructure.directories[packageName].directories[providerType] = dir;
+    }
+    
+    return chromeStructure.directories[packageName].directories[providerType];
 }
 
 function getManifests()
@@ -284,6 +318,7 @@ function getManifests()
 function parseManifest(manifest, path)
 {
     var line, params, rv;
+    var uriForManifest = iosvc.newURI(getURLSpecFromFile(path), null, null);
     // Pick apart the manifest line by line.
     var lines = manifest.split("\n");
     rv = [];
@@ -302,11 +337,192 @@ function parseManifest(manifest, path)
                 // push( [chrome uri, path to manifest])
                 rv.push(["chrome://" + params[1] + "/" + params[0], path]);
                 break;
+            case "override":
+                if (params.length >= 3)
+                {
+                    try {
+                        var resolvedURI = iosvc.newURI(params[2], null, uriForManifest);
+                    } catch(ex) {}
+                    if (resolvedURI)
+                        chromeOverrides.push([params[1], resolvedURI.spec, path]);
+                    else
+                        chromeOverrides.push([params[1], params[2], path]);
+                }
+
             // Otherwise, don't do anything.
         }
     }
     return rv;
 }
+
+function updateOverrides(callback)
+{
+    var overridden, override, manifest, overriddenURI, expectedURI, prob, desc;
+    for (var i = 0; i < chromeOverrides.length; i++)
+    {
+        overridden = chromeOverrides[i][0];
+        override = chromeOverrides[i][1];
+        manifest = chromeOverrides[i][2];
+        overriddenURI = iosvc.newURI(overridden, null, null);
+        expectedURI = chromeReg.convertChromeURL(overriddenURI);
+        if (expectedURI.spec != override)
+        {
+            desc = getStr("problem.override.notApplied", [overridden, override]);
+            prob = {desc: desc, manifest: manifest, severity: "warning"};
+            chromeBrowser.addProblem(prob);
+        }
+        else // OK, this thing got applied. Do stuff:
+        {
+            if (expectedURI.scheme == "file")
+            {
+                overrideFile(overridden, override, manifest);
+            }
+            else if (expectedURI.scheme == "jar")
+            {
+                overrideJar(overridden, override, expectedURI, manifest);
+            }
+            else
+            {
+                desc = getStr("problem.override.unrecognized.url",
+                              [overridden, override]);
+                prob = {desc: desc, manifest: manifest, severity: "error"};
+                chromeBrowser.addProblem(prob);
+            }
+        }
+    }
+    setTimeout(callback, 0);
+}
+
+function overrideFile(overridden, override, manifest)
+{
+    var desc, prob, f = getFileFromURLSpec(override);
+    // The file needs to exist.
+    if (!f || !f.exists())
+    {
+        desc = getStr("problem.override.pathDoesNotExist", [overridden, override]);
+        prob = {desc: desc, manifest: manifest, severity: "error"};
+        chromeBrowser.addProblem(prob);
+        return;
+    }
+    // Overriding directories is pretty useless.
+    if (f.isDirectory())
+    {
+        desc = getStr("problem.override.isDir", [overridden, override]);
+        prob = {desc: desc, manifest: manifest, severity: "warning"};
+        chromeBrowser.addProblem(prob);
+        return;
+    }
+    
+    // Get a filesize neatly.
+    try {
+        var fileSize = f.fileSize;
+    }
+    catch (ex) { fileSize = 0; }
+    
+    addOverride(overridden, override, manifest, "file", fileSize);
+    return;
+}
+
+function overrideJar(overridden, override, expectedURI, manifest)
+{
+    var desc, prob;
+    try
+    {
+        var jarURI = expectedURI.QueryInterface(nsIJARURI);
+        var jarFileURL = jarURI.JARFile.QueryInterface(nsIFileURL);
+
+        // Doublecheck this jarfile exists:
+        if (!jarFileURL.file.exists())
+        {
+            desc = getStr("problem.override.noJarFile", [overridden, override]);
+            prob = {desc: desc, manifest: manifest, severity: "error"};
+            chromeBrowser.addProblem(prob);
+            return;
+        }
+
+        var zr = newObject("@mozilla.org/libjar/zip-reader;1", nsIZipReader);
+        if ("init" in zr)
+        {
+            zr.init(jarFileURL.file);
+            zr.open();
+        }
+        else
+        {
+            zr.open(jarFileURL.file);
+        }
+
+        // If we've survived opening it, check if what we really want from it:
+        var path = jarURI.directory;
+        path = (path[0] == "/") ? path.substr(1) : path;
+        // Oh, right. Don't try a directory. That's useless for overrides.
+        if (path[path.length - 1] == "/")
+        {
+            desc = getStr("problem.override.isDir", [overridden, override]);
+            prob = {desc: desc, manifest: manifest, severity: "error"};
+            chromeBrowser.addProblem(prob);
+            return;
+        }
+        // Right. So does it really have this file?
+        var entry;
+        // Assignment in if statement. Sue me.
+        try {
+            entry = zr.getEntry(path);
+            if (!entry)
+                throw "NoEntryFound";
+        }
+        catch (ex)
+        {
+            var desc = getStr("problem.override.fileNotInJar", [overridden, override]);
+            prob = {desc: desc, manifest: manifest, severity: "error"};
+            chromeBrowser.addProblem(prob);
+            return;
+        }
+
+        // Make sure it knows what we're talking 'bout.
+        entry = entry.QueryInterface(Components.interfaces.nsIZipEntry);
+        try
+        {
+            var fileSize = entry.realSize;
+        }
+        catch (ex) { fileSize = 0; }
+
+        // Do it:
+        addOverride(overridden, override, manifest, "jar", fileSize);
+    }
+    catch (ex)
+    {
+        // Uh oh.
+        desc = getStr("problem.override.jarFailure", [overridden, override, ex]);
+        prob = {desc: desc, manifest: manifest, severity: "warning"};
+        chromeBrowser.addProblem(prob);
+        return;
+    }
+}
+
+function addOverride(overridden, override, manifest, scheme, size)
+{
+    // Alright. Get stuff.
+    var chromeThingy = chromeStructure.findURL(overridden);
+    if (!chromeThingy)
+    {
+        // So basically, you can override whatever you want.
+        // It's hard to make a tree out of that.
+        // We will try for a small bit, but not too long:
+        var chromeThingyDir = overridden.replace(/[^\/]+$/, "");
+        var chromeThingyFile = overridden.substr(chromeThingyDir.length);
+        chromeThingy = chromeStructure.findURL(chromeThingyDir);
+        if (!chromeThingy)
+            return; // Still nothing, give up.
+
+        chromeThingy = new ChromeFile(chromeThingy, chromeThingyFile, size);
+    }
+    chromeThingy.size = size;
+    chromeThingy.manifest = manifest;
+    chromeThingy.scheme = scheme;
+    chromeThingy.resolvedURI = override;
+    return;
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 // Chrome Structure representation.
@@ -465,5 +681,6 @@ ChromeFile.prototype.getPath = ChromeDirectory.prototype.getPath;
 
 function logException (ex)
 {
-         // FIXME: logException doesn't do anything yet.
+    // FIXME: logException doesn't do anything yet.
+    dump(ex)
 }

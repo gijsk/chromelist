@@ -19,5 +19,5 @@
   <RDF:Description RDF:about="rdf:#$w+QUG3"
                    em:id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}"
                    em:minVersion="2.0"
-                   em:maxVersion="3.0a3" />
+                   em:maxVersion="3.0" />
 </RDF:RDF>

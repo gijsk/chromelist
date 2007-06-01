@@ -1,0 +1,35 @@
+# The following is all cruft to test ourselves:
+# Map to weird URL:
+content   foobar                                    ftp://ftp.mozilla.org/pub/firefox/
+# Map to non-existing thing:
+content   foobar2                                   aghaueghiauhga/
+# Map to file:
+content   foobar3                                   install.rdf/
+# Map to empty dir
+content   foobar4                                   emptydir/
+
+
+# Map to wrong jar:
+content   foobar9                                   jar:foo2.jar!/foo/
+# Map to file not in jar:
+content   foobar10                                  jar:foo.jar!/foo.html/blah/
+
+
+# Need absolute paths. :(
+
+# Override testing:
+
+# Override non-existing path:
+override chrome://chromelist/content/blah.js        file:///Users/gijskruitbosch/chromelist/blah2.js
+
+# Override dir:
+override chrome://chromelist/content/foo/           file:///Users/gijskruitbosch/chromelist/locale/
+
+# Override weird URL:
+override chrome://chromelist/content/google.html    http://www.google.com/
+
+# Override wrong jar:
+override chrome://chromelist/content/bar.html       jar:file:///Users/gijskruitbosch/chromelist/foo2.jar!/foo.html
+
+# Override file not in jar:
+override chrome://chromelist/content/foo.html       jar:file:///Users/gijskruitbosch/chromelist/foo.jar!/foo.html

@@ -1,5 +1,13 @@
 ﻿<!-- window stuff -->
 <!ENTITY     window.title                   "Chrome Browser">
+<!ENTITY     problems.window.title          "Chrome Registration Problems">
+
+<!-- button stuff -->
+<!ENTITY     btn.close                      "Close">
+<!ENTITY     btn.close.accesskey            "C">
+<!ENTITY     btn.problems                   "View Problems...">
+<!ENTITY     btn.problems.accesskey         "P">
+
 
 <!-- tree stuff -->
 <!ENTITY     tree.filetree.filesize         "File Size">

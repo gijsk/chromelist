@@ -7,9 +7,14 @@ function onLoad()
     iosvc = getService("@mozilla.org/network/io-service;1", "nsIIOService");
     chromeReg = getService("@mozilla.org/chrome/chrome-registry;1",
                            "nsIToolkitChromeRegistry");
+    
+    consoleService = getService("@mozilla.org/consoleservice;1",
+                                "nsIConsoleService");
 
     chrometree.view = chromeTree;
     chromedirtree.view = chromeDirTree;
+    
+    chromeBrowser.init();
     setStatusText(getStr("info.status.reading.manifests"));
     setTimeout(refreshChromeList, 0, onLoadDone);
 }
@@ -20,7 +25,9 @@ function onLoadDone()
     setStatusProgress(-1);
     chromeTree.currentURL = "chrome://";
     chromeDirTree.changeDir("chrome://");
-    chromeBrowser.init();
+    
+    if (chromeBrowser.foundProblems)
+        document.getElementById("problem-button").setAttribute("disabled", false);
 }
 
 function onUnload()
@@ -44,7 +51,37 @@ function cb_init()
     this.prefBranch = this.prefService.getBranch("extensions.chromelist.");
     this.prefBranchInternal =
         this.prefBranch.QueryInterface(nsIPrefBranchInternal);
+    this.foundProblems = false;
+}
 
+chromeBrowser.close =
+function cb_close()
+{
+    //XXXgijs: Do we need to null out stuff here? Might be prudent...
+    //         Also see onUnload.
+    window.close();
+}
+
+chromeBrowser.showProblems =
+function cb_showProblems()
+{
+    var existingWindow = getWindowByType("global:console");
+    if (existingWindow)
+    {
+        existingWindow.focus();
+        return;
+    }
+    
+    var windowArgs = "chrome,extrachrome,menubar,resizable,scrollbars,status,toolbar";
+    window.open("chrome://global/content/console.xul", "_blank", windowArgs);
+}
+
+chromeBrowser.addProblem =
+function cb_addProblem(problem)
+{
+    var error = chromeError(problem.desc, problem.manifest, problem.severity);
+    consoleService.logMessage(error);
+    this.foundProblems = true;
 }
 
 chromeBrowser.getPref =
@@ -179,7 +216,22 @@ function cb_lxr(item)
 chromeBrowser.showProperties =
 function cb_properties(item)
 {
-    var windowArgs = "dialog,resizable";
+    var windowArgs = "scrollbars,chrome,resizable,dialog=no";
     window.openDialog("chrome://chromelist/content/properties.xul", "_blank", windowArgs, item);
 }
+
+
+// Error in chrome registration reported to console:
+function chromeError(message, file, severity)
+{
+    const SCRIPT_ERROR_IID = "@mozilla.org/scripterror;1";
+    var scriptError = newObject(SCRIPT_ERROR_IID, "nsIScriptError");
+    var flags = Components.interfaces.nsIScriptError.errorFlag;
+    if (severity == "warning")
+        flags = Components.interfaces.nsIScriptError.warningFlag;
+
+    scriptError.init(message, file, null, null, null, flags, null);
+    return scriptError;
+}
+
 

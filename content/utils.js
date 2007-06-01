@@ -47,11 +47,7 @@
 function getWindowByType(windowType)
 {
     const MEDIATOR_CONTRACTID = "@mozilla.org/appshell/window-mediator;1";
-    const nsIWindowMediator  = Components.interfaces.nsIWindowMediator;
-
-    var windowManager =
-        Components.classes[MEDIATOR_CONTRACTID].getService(nsIWindowMediator);
-
+    var windowManager = getService(MEDIATOR_CONTRACTID, "nsIWindowMediator");
     return windowManager.getMostRecentWindow(windowType);
 }
 
@@ -207,6 +203,32 @@ function getFileFromURLSpec(url)
     return handler.getFileFromURLSpec(url);
 }
 
+function getURLSpecFromFile (file)
+{
+    if (!file)
+        return null;
+
+    const IOS_CTRID = "@mozilla.org/network/io-service;1";
+    const LOCALFILE_CTRID = "@mozilla.org/file/local;1";
+
+    const nsIIOService = Components.interfaces.nsIIOService;
+    const nsILocalFile = Components.interfaces.nsILocalFile;
+
+    if (typeof file == "string")
+    {
+        var fileObj =
+            Components.classes[LOCALFILE_CTRID].createInstance(nsILocalFile);
+        fileObj.initWithPath(file);
+        file = fileObj;
+    }
+
+    var service = Components.classes[IOS_CTRID].getService(nsIIOService);
+    var nsIFileProtocolHandler = Components.interfaces.nsIFileProtocolHandler;
+    var fileHandler = service.getProtocolHandler("file");
+    fileHandler = fileHandler.QueryInterface(nsIFileProtocolHandler);
+    return fileHandler.getURLSpecFromFile(file);
+}
+
 
 // This would be my own cruft:
 
@@ -215,8 +237,11 @@ function glimpseEscape(str)
     return str.replace(/([\$\^\*\[\|\(\)\!\\;,#><\-.])/g, "\\$1");
 }
 
-function getStr(id)
+function getStr(id, args)
 {
+    if (args && (args instanceof Array) && args.length > 0)
+        return document.getElementById("locale-strings").getFormattedString(id, args);
+
     return document.getElementById("locale-strings").getString(id);
 }
 
