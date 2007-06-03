@@ -24,7 +24,7 @@
 
         <hbox width="1" flex="1">
           <tree id="chromedirtree" class="plain" flex="1" hidecolumnpicker="true"
-                persist="collapsed">
+                persist="collapsed" onkeypress="chromeDirTree.keypress(event)">
             <treecols>
               <treecol id="chromedirname" hideheader="true" flex="1"
                        primary="true" persist="width ordinal hidden"/>
@@ -38,7 +38,8 @@
             <grippy/>
           </splitter>
           <tree id="chrometree" class="plain" flex="2" seltype="single"
-                enableColumnDrag="true" context="chromemenu">
+                enableColumnDrag="true" context="chromemenu"
+                onkeypress="chromeTree.keypress(event);">
             <treecols>
               <treecol  id="chromefilename" sortDirection="descending"
                         label="&tree.filetree.filename;" flex="3" 
@@ -52,16 +53,16 @@
                         persist="width ordinal hidden sortDirection" flex="1"/>
             </treecols>
             <treechildren id="chromefiletreechildren" class="fileTree"
-                          ondblclick="chromeTree.dblClick(event);" />
+                          ondblclick="chromeTree.dblClick(event);"/>
           </tree>
         </hbox>
         <hbox>
             <toolbarbutton id="close-button" label="&btn.close;"
                            accesskey="&btn.close.accesskey;" disabled="false"
-                           oncommand="chromeBrowser.close()"/>
+                           command="chromelist-close-command"/>
             <toolbarbutton id="problem-button" label="&btn.problems;"
                            accesskey="&btn.problems.accesskey;" disabled="true"
-                           oncommand="chromeBrowser.showProblems()"/>
+                           command="chromelist-problem-command"/>
         </hbox>
         <statusbar id="status-bar" class="chromeclass-status">
             <statusbarpanel id="status-text" crop="right" flex="1"/>
@@ -111,4 +112,12 @@
                     oncommand="chromeBrowser.showProperties(chromeTree.getCurrentItem());"/>
 
         </popup>
+        <commandset id="chromelist-commands">
+            <command id="chromelist-close-command" oncommand="chromeBrowser.close()"/>
+            <command id="chromelist-problem-command" oncommand="chromeBrowser.showProblems()"/>
+        </commandset>
+        <keyset>
+            <key id="close-key" command="chromelist-close-command" modifiers="accel" key="&close.shortcut;"/>
+            <key id="problem-key" command="chromelist-problem-command" modifiers="accel" key="&problems.shortcut;"/>
+        </keyset>
 </window>

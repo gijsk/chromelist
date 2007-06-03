@@ -8,6 +8,10 @@
 <!ENTITY     btn.problems                   "View Problems...">
 <!ENTITY     btn.problems.accesskey         "P">
 
+<!-- shortcut stuff -->
+<!ENTITY     close.shortcut                 "W">
+<!ENTITY     problems.shortcut              "P">
+
 
 <!-- tree stuff -->
 <!ENTITY     tree.filetree.filesize         "File Size">

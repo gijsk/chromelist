@@ -59,6 +59,7 @@ var chromeDirTree = {
     changeDir:              cdt_changeDir,
     indexOfURL:             cdt_indexOfURL,
     canDrop:                function (aIndex, aOrientation) { return false; },
+    keypress:               cdt_keypress,
     click:                  cdt_click
 }
 
@@ -193,7 +194,7 @@ function cdt_cdup()
     var parentIndex = this.getParentIndex(this.selection.currentIndex);
     if (parentIndex != -1)
     {
-        this.changeDir(this.data[parentIndex].href);
+        this.changeDir(this.data[parentIndex].href, false);
         this.selection.select(parentIndex);
     }
 }
@@ -205,7 +206,7 @@ function cdt_reselectCurrentDirectory()
     this.treebox.ensureRowIsVisible(index);
 }
 
-function cdt_changeDir(href)
+function cdt_changeDir(href, forceOpen)
 {
     // Hrmmm....
     if (!(/\/$/).test(href)) // No slash at the end? tsk.
@@ -249,7 +250,7 @@ function cdt_changeDir(href)
         if (chromeTree.currentURL.indexOf(this.data[x].href) == 0)
         {
             // If the directory is not open, open it.
-            if (!this.data[x].open)
+            if (!this.data[x].open && forceOpen)
                 this.toggleOpenState(x);
 
             if (chromeTree.currentURL == this.data[x].href) // Woo, we're done!
@@ -312,6 +313,21 @@ function cdt_click(event)
 
         // index == row.value in case were collapsing the folder
         if ((index == row.value) && (this.data[index].href != chromeTree.currentURL))
-            this.changeDir(this.data[index].href);
+            this.changeDir(this.data[index].href, true);
+    }
+}
+
+function cdt_keypress(event)
+{
+    if (event.keyCode == 13)
+    {
+        var row = {};   var col = {};   var child = {};
+        var index = this.selection.currentIndex;
+        if (this.data[index].href != chromeTree.currentURL)
+        {
+            this.changeDir(this.data[index].href, false);
+            event.stopPropagation();
+            event.preventDefault();
+        }
     }
 }

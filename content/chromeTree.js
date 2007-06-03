@@ -61,6 +61,7 @@ var chromeTree = {
     getFormattedFileSize: ct_getFormattedFileSize,
     click:                function() {},
     dblClick:             ct_dblClick,
+    keypress:             ct_keypress,
     popupShowing:         ct_popupShowing,
     getCurrentHref:       ct_getCurrentHref,
     getCurrentItem:       ct_getCurrentItem,
@@ -340,5 +341,15 @@ function ct_dblClick(event)
             chromeBrowser.viewSourceOf(this.data[i].href);
         else
             chromeBrowser.view(this.data[i].href);
+    }
+}
+
+function ct_keypress(event)
+{
+    if (event.keyCode == 13)
+    {
+        var e = {button: 0, originalTarget: {localName: "treechildren"}};
+        // Hack-er-tee-hack:
+        this.dblClick(e);
     }
 }
