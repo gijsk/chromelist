@@ -1,14 +1,22 @@
 <?xml version="1.0"?>
 
+<!DOCTYPE overlay SYSTEM "chrome://chromelist/locale/ChromeListOverlay.dtd" >
 <overlay id="chromeListToolsOverlay"
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-<script type="application/x-javascript" src="chrome://chromelist/content/ChromeListOverlay.js" />
+<script type="application/x-javascript"
+        src="chrome://chromelist/content/ChromeListOverlay.js" />
 
 <menupopup id="menu_ToolsPopup">
-	<menuitem insertafter="devToolsSeparator" label="Explore Chrome"
-	accesskey="x" oncommand="startChromeList();" />	
+	<menuitem insertafter="devToolsSeparator" label="&chromelist.menu;"
+	accesskey="&chromelist.menu.accesskey;" oncommand="startChromeList();" />	
 </menupopup>
+
+<menupopup id="taskPopup">
+	<menuitem insertafter="devToolsSeparator" label="&chromelist.menu;"
+	accesskey="&chromelist.menu.accesskey;" oncommand="startChromeList();" />	
+</menupopup>
+
 
 </overlay>
 
