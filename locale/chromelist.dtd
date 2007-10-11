@@ -20,11 +20,12 @@
 
 <!-- Context menu stuff -->
 <!ENTITY     cx.open                        "Open">
+<!ENTITY     cx.open.accesskey              "O">
 <!ENTITY     cx.open.tab                    "In a New Tab">
 <!ENTITY     cx.open.tab.accesskey          "T">
 <!ENTITY     cx.open.window                 "in a New Window">
 <!ENTITY     cx.open.window.accesskey       "W">
-<!ENTITY     cx.open.current                "Open in Current Window/Tab">
+<!ENTITY     cx.open.current                "in Current Window/Tab">
 <!ENTITY     cx.open.current.accesskey      "C">
 <!ENTITY     cx.view-source                 "View Source">
 <!ENTITY     cx.view-source.accesskey       "S">

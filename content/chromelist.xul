@@ -12,12 +12,11 @@
         persist="width height screenX screenY sizemode">
         <script type="application/x-javascript" src="chrome://chromelist/content/file-utils.js"></script>
         <script type="application/x-javascript" src="chrome://chromelist/content/utils.js"></script>
-        <script type="application/x-javascript" src="chrome://browser/content/utilityOverlay.js"></script>
         <script type="application/x-javascript" src="chrome://global/content/contentAreaUtils.js"></script>
         <script type="application/x-javascript" src="chrome://chromelist/content/chromelist.js"></script>
         <script type="application/x-javascript" src="chrome://chromelist/content/chromeStruct.js"></script>
         <script type="application/x-javascript" src="chrome://chromelist/content/chromeDirTree.js"></script>
-        <script type="application/x-javascript" src="chrome://chromelist/content/chromeTree.js"></script>
+        <script id="last-script" type="application/x-javascript" src="chrome://chromelist/content/chromeTree.js"></script>
         <stringbundleset>
           <stringbundle id="locale-strings" src="chrome://chromelist/locale/chromelist.properties"/>
         </stringbundleset>
@@ -73,7 +72,10 @@
         </statusbar>
 
         <popup id="chromemenu" onpopupshowing="return chromeTree.popupShowing(event);">
-          <menu id="cx-open" label="&cx.open;">
+          <menuitem id="cx-open-ext" label="&cx.open;" accesskey="&cx.open.accesskey;"
+                    oncommand="chromeBrowser.view(chromeTree.getCurrentAbsoluteHref());"
+                    hidden="true"/>
+          <menu id="cx-open" label="&cx.open;" accesskey="&cx.open.accesskey;">
             <menupopup>
               <menuitem id="cx-opencurrent" label="&cx.open.current;" accesskey="&cx.open.current.accesskey;"
                         oncommand="chromeBrowser.viewInCurrent(chromeTree.getCurrentHref());"/>

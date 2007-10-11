@@ -1,4 +1,7 @@
 var chrometree, chromedirtree;
+const ThunderbirdUUID = "{3550f703-e582-4d05-9a08-453d09bdfdc6}";
+const FirefoxUUID = "{ec8030f7-c20a-464f-9b0e-13a3a9e97384}";
+const XHTML_NS = "http://www.w3.org/1999/xhtml";
 
 function onLoad()
 {
@@ -51,6 +54,20 @@ function cb_init()
     this.prefBranch = this.prefService.getBranch("extensions.chromelist.");
     this.prefBranchInternal =
         this.prefBranch.QueryInterface(nsIPrefBranchInternal);
+
+    // Fit in, wherever we may be:
+    this.initAppCompat();
+    if (this.host == "Firefox")
+    {
+        var s = document.createElementNS(XHTML_NS, "html:script");
+        s.setAttribute("src", "chrome://browser/content/utilityOverlay.js");
+        s.setAttribute("type", "application/x-javascript");
+        var ls = document.getElementById("last-script");
+        var p = ls.parentNode;
+        p.insertBefore(s, ls);
+    }
+
+    // Nothing done yet == no problems:
     this.foundProblems = false;
 }
 
@@ -60,6 +77,30 @@ function cb_close()
     //XXXgijs: Do we need to null out stuff here? Might be prudent...
     //         Also see onUnload.
     window.close();
+}
+
+chromeBrowser.initAppCompat =
+function cb_initAppCompat()
+{
+    var app = getService("@mozilla.org/xre/app-info;1", "nsIXULAppInfo");
+    if (!app)
+    {
+        alert("Dude, couldn't find nsIXULAppInfo. No good!");
+        return;
+    }
+    
+    switch (app.ID)
+    {
+        case FirefoxUUID:
+             this.host = "Firefox";
+             break;
+        case ThunderbirdUUID:
+             this.host = "Thunderbird";
+             break;
+        default:
+             this.host = "Toolkit";
+    }
+    return;
 }
 
 chromeBrowser.showProblems =
@@ -122,19 +163,40 @@ function cb_viewSourceOf(href)
 chromeBrowser.view =
 function cb_view(href)
 {
+    const PROTO_CID = "@mozilla.org/uriloader/external-protocol-service;1";
     if (!href)
     {
-        alert("Couldn't get the URL for this file... sorry!");
+        alert(getStr("error.no.url.for.file"));
         return;
     }
 
-    var openInTab = this.getPref("open-files-in-tab");
-    if (!openInTab)
+    if (this.host == "Firefox")
     {
-        openUILinkIn(href, "window");
+        var openInTab = this.getPref("open-files-in-tab");
+        if (!openInTab)
+        {
+            openUILinkIn(href, "window");
+            return;
+        }
+        openUILinkIn(href, "tab");
         return;
     }
-    openUILinkIn(href, "tab");
+    else if (this.host == "Thunderbird")
+    {
+        try {
+            var msngr = newObject("@mozilla.org/messenger;1", "nsIMessenger");
+        } catch (ex) {
+            alert(getStr("error.launching.url", [ex]));
+        }
+        if (msngr)
+            msngr.launchExternalURL(href);
+    }
+    else if (this.host == "Toolkit")
+    {
+        const extProtoSvc = getService(PROTO_CID, "nsIExternalProtocolService");
+        var uri = iosvc.newURI(href, "UTF-8", null);
+        extProtoSvc.loadUrl(uri);
+    }
 }
 
 chromeBrowser.viewInCurrent =
@@ -142,7 +204,7 @@ function cb_viewInCurrent(href)
 {
     if (!href)
     {
-        alert("Couldn't get the URL for this file... sorry!");
+        alert(getStr("error.no.url.for.file"));
         return;
     }
     openUILinkIn(href, "current");
@@ -153,7 +215,7 @@ function cb_viewInWindow(href)
 {
     if (!href)
     {
-        alert("Couldn't get the URL for this file... sorry!");
+        alert(getStr("error.no.url.for.file"));
         return;
     }
     openUILinkIn(href, "window");
@@ -164,7 +226,7 @@ function cb_viewInTab(href)
 {
     if (!href)
     {
-        alert("Couldn't get the URL for this file... sorry!");
+        alert(getStr("error.no.url.for.file"));
         return;
     }
     openUILinkIn(href, "tab");
@@ -203,13 +265,12 @@ function cb_saveAs(href)
 chromeBrowser.lxr =
 function cb_lxr(item)
 {
-    var openWhere = this.getPref("open-files-in-tab") ? "tab" : "window";
     if (item)
     {
         var searchString = encodeURIComponent(glimpseEscape(item.leafName));
-        openUILinkIn(this.getPref("lxr-url").replace("%s", searchString), openWhere);
+        var href = this.getPref("lxr-url").replace("%s", searchString);
+        this.view(href);
     }
-
 }
 
 // Properties stuff.
@@ -219,6 +280,8 @@ function cb_properties(item)
     var windowArgs = "scrollbars,chrome,resizable,dialog=no";
     window.openDialog("chrome://chromelist/content/properties.xul", "_blank", windowArgs, item);
 }
+
+chromeBrowser.host = "Unknown";
 
 
 // Error in chrome registration reported to console:

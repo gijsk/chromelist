@@ -80,6 +80,9 @@ function makeChromeTree(chromeURLs, callback, callbackParam)
         {
             chromeURI = iosvc.newURI(chromeURLs[currentIndex][0], null, null);
             localURI = chromeReg.convertChromeURL(chromeURI);
+            // In some cases, you can map a chrome URL to another chrome URL - fun!
+            while (localURI.scheme == "chrome")
+                localURI = chromeReg.convertChromeURL(localURI);
         }
         catch (ex)
         {

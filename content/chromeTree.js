@@ -64,6 +64,7 @@ var chromeTree = {
     keypress:             ct_keypress,
     popupShowing:         ct_popupShowing,
     getCurrentHref:       ct_getCurrentHref,
+    getCurrentAbsoluteHref: ct_getCurrentAbsoluteHref,
     getCurrentItem:       ct_getCurrentItem,
     mouseOver:            function() {},
     cut:                  function() {},
@@ -245,10 +246,22 @@ function ct_popupShowing(event)
         return false; // cancel, we can't do anything? :S
 
     var selectedItem = this.data[this.selection.currentIndex];
+
     // Can't open or save a dir, nor copy contents:
     var isDir = selectedItem.isDirectory;
     document.getElementById("cx-open").setAttribute("disabled", isDir);
     document.getElementById("cx-saveas").setAttribute("disabled", isDir);
+
+    // Can't open in tabs, current tab, or window when not in Fx:
+    if (chromeBrowser.host != "Firefox")
+    {
+        document.getElementById("cx-open-ext").hidden = false;
+        document.getElementById("cx-open").hidden = true;
+        if (chromeBrowser.host == "Toolkit")
+            document.getElementById("cx-saveas").hidden = true;
+    }
+
+    // Only show the file or jar items, depending on the kind of mapping.
     if (selectedItem.scheme == "file")
     {
         document.getElementById("cx-copyjarurl").hidden = true;
@@ -274,6 +287,14 @@ function ct_getCurrentHref()
         return "";
     var selectedItem = this.data[this.selection.currentIndex];
     return selectedItem.href;
+}
+
+function ct_getCurrentAbsoluteHref()
+{
+    if (this.selection.count != 1)
+        return "";
+    var selectedItem = this.data[this.selection.currentIndex];
+    return selectedItem.resolvedURI;
 }
 
 function ct_getCurrentItem()
@@ -338,9 +359,17 @@ function ct_dblClick(event)
     {
         // View the source of rdf, dtd, xul or js files by default.
         if ((/xul|js|rdf|dtd/).test(this.getExtension(this.data[i].leafName)))
+        {
             chromeBrowser.viewSourceOf(this.data[i].href);
-        else
+        }
+        else if (chromeBrowser.host == "Firefox")
+        {
             chromeBrowser.view(this.data[i].href);
+        }
+        else
+        {
+            chromeBrowser.view(this.data[i].resolvedURI);
+        }
     }
 }
 
