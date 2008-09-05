@@ -209,10 +209,7 @@ function getURLSpecFromFile (file)
         return null;
 
     const IOS_CTRID = "@mozilla.org/network/io-service;1";
-    const LOCALFILE_CTRID = "@mozilla.org/file/local;1";
-
     const nsIIOService = Components.interfaces.nsIIOService;
-    const nsILocalFile = Components.interfaces.nsILocalFile;
 
     if (typeof file == "string")
         file = localFile(file);
@@ -229,6 +226,9 @@ function getURLSpecFromFile (file)
 
 function localFile(path)
 {
+    const LOCALFILE_CTRID = "@mozilla.org/file/local;1";
+    const nsILocalFile = Components.interfaces.nsILocalFile;
+
     if (typeof path == "string")
     {
         var fileObj =
