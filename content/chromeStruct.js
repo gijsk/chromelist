@@ -116,7 +116,7 @@ function makeChromeTree(chromeURLs, callback, callbackParam)
 
 function addJarSubs(uri, provider, pack, manifest)
 {
-    var prob;
+    var desc, prob;
     var jarURI = uri.QueryInterface(nsIJARURI);
     var jarFileURL = jarURI.JARFile.QueryInterface(nsIFileURL);
     var zr = newObject("@mozilla.org/libjar/zip-reader;1", nsIZipReader);
@@ -205,7 +205,7 @@ function addFileSubs(uri, provider, pack, manifest)
             entry = entries.getNext().QueryInterface(nsIFile);
             fileName = entry.leafName;
             urlFileName = getURLSpecFromFile(entry);
-            urlDir = urlFileName.replace(/[^\/]+$/, "");
+            urlDir = urlFileName.replace(/[^\/]+\/?$/, "");
             urlFileName = urlFileName.substr(urlDir.length);
             addedSomething = true;
             // Try to get a normal filesize, but for all we know this may fail.
