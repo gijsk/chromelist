@@ -222,8 +222,9 @@ function addFileSubs(uri, provider, pack, manifest)
             else
             {
                 // Remove the slash from the name before use...
-                subdir = new ChromeDirectory(cDir, urlFileName.substring(0, urlFileName.length -1), manifest);
-                cDir.directories[urlFileName] = subdir;
+                var subdirName = urlFileName.substring(0, urlFileName.length -1);
+                subdir = new ChromeDirectory(cDir, subdirName, manifest);
+                cDir.directories[subdirName] = subdir;
                 parseLocalDir(entry.directoryEntries, subdir, entry.path);
             }
         }
