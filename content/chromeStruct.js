@@ -198,12 +198,15 @@ function addFileSubs(uri, provider, pack, manifest)
 {
     function parseLocalDir(entries, cDir, dirPath)
     {
-        var entry, filename, size, subdir;
+        var entry, fileName, size, subdir, urlFileName, urlDir;
         var addedSomething = false;
         while (entries.hasMoreElements())
         {
             entry = entries.getNext().QueryInterface(nsIFile);
-            filename = entry.leafName;
+            fileName = entry.leafName;
+            urlFileName = getURLSpecFromFile(entry);
+            urlDir = urlFileName.replace(/[^\/]+$/, "");
+            urlFileName = urlFileName.substr(urlDir.length);
             addedSomething = true;
             // Try to get a normal filesize, but for all we know this may fail.
             try
@@ -214,12 +217,12 @@ function addFileSubs(uri, provider, pack, manifest)
 
             if (!entry.isDirectory())
             {
-                cDir.files[filename] = new ChromeFile(cDir, filename, size);
+                cDir.files[urlFileName] = new ChromeFile(cDir, urlFileName, size);
             }
             else
             {
-                subdir = new ChromeDirectory(cDir, filename, manifest);
-                cDir.directories[filename] = subdir;
+                subdir = new ChromeDirectory(cDir, urlFileName, manifest);
+                cDir.directories[urlFileName] = subdir;
                 parseLocalDir(entry.directoryEntries, subdir, entry.path);
             }
         }
@@ -562,9 +565,9 @@ function cs_findURL(url)
 ///////////////////
 // ChromeDirectory
 // Constructor
+// Note: name is expected to be URI-encoded
 function ChromeDirectory(someParent, name, manifest)
 {
-    this.leafName = name;
     this.parent = someParent;
     this.href = this.parent.href + name + "/";
     this.level = this.parent.level + 1;
@@ -585,6 +588,7 @@ function ChromeDirectory(someParent, name, manifest)
     this.files = new Object();
     this.manifest = manifest;
     this.path = this.getPath();
+    this.leafName = decodeURIComponent(name);
 }
 
 // DON'T PASS DIRECTORIES, _ONLY_ FILES
@@ -650,9 +654,9 @@ ChromeDirectory.prototype.isDirectory = true;
 ///////////////////
 // ChromeFile
 // Constructor
+// Note: name is expected to be URI-encoded
 function ChromeFile(parent, name, size)
 {
-    this.leafName = name;
     this.parent = parent;
     this.href = this.parent.href + name;
     this.level = this.parent.level + 1;
@@ -661,7 +665,9 @@ function ChromeFile(parent, name, size)
     this.scheme = resolvedURI.scheme;
     this.resolvedURI = resolvedURI.spec;
     this.path = this.getPath();
+    this.leafName = decodeURIComponent(name);
 }
+
 ChromeFile.prototype.TYPE = "ChromeFile";
 ChromeFile.prototype.parent = null;
 ChromeFile.prototype.isDirectory = false;

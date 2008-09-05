@@ -215,12 +215,7 @@ function getURLSpecFromFile (file)
     const nsILocalFile = Components.interfaces.nsILocalFile;
 
     if (typeof file == "string")
-    {
-        var fileObj =
-            Components.classes[LOCALFILE_CTRID].createInstance(nsILocalFile);
-        fileObj.initWithPath(file);
-        file = fileObj;
-    }
+        file = localFile(file);
 
     var service = Components.classes[IOS_CTRID].getService(nsIIOService);
     var nsIFileProtocolHandler = Components.interfaces.nsIFileProtocolHandler;
@@ -231,6 +226,18 @@ function getURLSpecFromFile (file)
 
 
 // This would be my own cruft:
+
+function localFile(path)
+{
+    if (typeof path == "string")
+    {
+        var fileObj =
+            Components.classes[LOCALFILE_CTRID].createInstance(nsILocalFile);
+        fileObj.initWithPath(path);
+        return fileObj;
+    }
+    return null;
+}
 
 function glimpseEscape(str)
 {
