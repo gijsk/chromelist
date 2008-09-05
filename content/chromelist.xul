@@ -21,69 +21,40 @@
           <stringbundle id="locale-strings" src="chrome://chromelist/locale/chromelist.properties"/>
         </stringbundleset>
 
-	<tabbox width="1" flex="1">
-	  <tabs>
-	    <tab id="explorer-view-tab" label="&tab.explore;"/>
-	    <tab id="search-view-tab" label="&tab.search;"/>
-	  </tabs>
-	  <tabpanels width="1" flex="1">
-	    <tabpanel id="explorer-view">
-	      <hbox width="1" flex="1">
-		<tree id="chromedirtree" class="plain" flex="1" hidecolumnpicker="true"
-		      persist="collapsed" onkeypress="chromeDirTree.keypress(event)">
-		  <treecols>
-		    <treecol id="chromedirname" hideheader="true" flex="1"
-			     primary="true" persist="width ordinal hidden"/>
-		  </treecols>
-		  <treechildren id="chromedirtreechildren"
-				class="dirTree"
-				onclick="chromeDirTree.click(event)"/>
-		</tree>
-		<splitter id="chromesplitter" style="width: 4px; max-width: 4px;"
-			  persist="state" collapse="before">
-		  <grippy/>
-		</splitter>
-		<tree id="chrometree" class="plain" flex="2" seltype="single"
-		      enableColumnDrag="true" context="chromemenu"
-		      onkeypress="chromeTree.keypress(event);">
-		  <treecols>
-		    <treecol  id="chromefilename" sortDirection="descending"
-			      label="&tree.filetree.filename;" flex="3" 
-			      persist="width ordinal hidden sortDirection"/>
-		    <splitter class="tree-splitter"/>
-		    <treecol  id="chromefilesize" style="text-align:right"
-			      label="&tree.filetree.filesize;" flex="1"
-			      persist="width ordinal hidden sortDirection"/>
-		    <splitter class="tree-splitter"/>
-		    <treecol  id="chromefiletype" label="&tree.filetree.filetype;"
-			      persist="width ordinal hidden sortDirection" flex="1"/>
-		  </treecols>
-		  <treechildren id="chromefiletreechildren" class="fileTree"
-				ondblclick="chromeTree.dblClick(event);"/>
-		</tree>
-	      </hbox>
-	    </tabpanel>
-	    <tabpanel id="search-view" orient="vertical">
-	      <hbox align="center">
-		<label value="&search.filename;" for="filename-box"
-		       accesskey="&search.filename.accesskey;"/>
-		<textbox id="filename-box"/>
-              </hbox>
-	      <hbox>
-		<vbox>
-		  <checkbox label="&search.case-sensitive;"
-		            accesskey="&search.case-sensitive.accesskey;"/>
-		  <checkbox label="&search.regular-expression;"
-		            accesskey="&search.regular-expression.accesskey;"/>
-		</vbox>
-		<spacer flex="1"/>
-                <button id="search-button" label="&search.label;"
-			accesskey="&search.accesskey;"
-			command="chromelist-search-command"/>
-	      </hbox>
-	    </tabpanel>
-	  </tabpanels>
-	</tabbox>
+        <hbox width="1" flex="1">
+          <tree id="chromedirtree" class="plain" flex="1" hidecolumnpicker="true"
+                persist="collapsed" onkeypress="chromeDirTree.keypress(event)">
+            <treecols>
+              <treecol id="chromedirname" hideheader="true" flex="1"
+                       primary="true" persist="width ordinal hidden"/>
+            </treecols>
+            <treechildren id="chromedirtreechildren"
+                          class="dirTree"
+                          onclick="chromeDirTree.click(event)"/>
+          </tree>
+          <splitter id="chromesplitter" style="width: 4px; max-width: 4px;"
+                    persist="state" collapse="before">
+            <grippy/>
+          </splitter>
+          <tree id="chrometree" class="plain" flex="2" seltype="single"
+                enableColumnDrag="true" context="chromemenu"
+                onkeypress="chromeTree.keypress(event);">
+            <treecols>
+              <treecol  id="chromefilename" sortDirection="descending"
+                        label="&tree.filetree.filename;" flex="3" 
+                        persist="width ordinal hidden sortDirection"/>
+              <splitter class="tree-splitter"/>
+              <treecol  id="chromefilesize" style="text-align:right"
+                        label="&tree.filetree.filesize;" flex="1"
+                        persist="width ordinal hidden sortDirection"/>
+              <splitter class="tree-splitter"/>
+              <treecol  id="chromefiletype" label="&tree.filetree.filetype;"
+                        persist="width ordinal hidden sortDirection" flex="1"/>
+            </treecols>
+            <treechildren id="chromefiletreechildren" class="fileTree"
+                          ondblclick="chromeTree.dblClick(event);"/>
+          </tree>
+        </hbox>
         <hbox>
             <toolbarbutton id="close-button" label="&btn.close;"
                            accesskey="&btn.close.accesskey;" disabled="false"
@@ -146,7 +117,6 @@
         <commandset id="chromelist-commands">
             <command id="chromelist-close-command" oncommand="chromeBrowser.close()"/>
             <command id="chromelist-problem-command" oncommand="chromeBrowser.showProblems()"/>
-	    <command id="chromelist-search-command" oncommand="chromeBrowser.setOffSearch()"/>
         </commandset>
         <keyset>
             <key id="close-key" command="chromelist-close-command" modifiers="accel" key="&close.shortcut;"/>
