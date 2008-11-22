@@ -83,6 +83,9 @@
                         oncommand="chromeBrowser.viewInTab(chromeTree.getCurrentHref());"/>
               <menuitem id="cx-openwindow" label="&cx.open.window;" accesskey="&cx.open.window.accesskey;"
                         oncommand="chromeBrowser.viewInWindow(chromeTree.getCurrentHref());"/>
+              <menuseparator id="cx-launch-sep"/>
+              <menuitem id="cx-launch" label="&cx.launch;" accesskey="&cx.launch.accesskey;"
+                        oncommand="chromeBrowser.launch(chromeTree.getCurrentItem());"/>
               <menuseparator/>
               <menuitem id="cx-view-source" label="&cx.view-source;" accesskey="&cx.view-source.accesskey;"
                         oncommand="chromeBrowser.viewSourceOf(chromeTree.getCurrentHref());"/>

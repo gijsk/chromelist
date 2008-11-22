@@ -268,6 +268,9 @@ function ct_popupShowing(event)
         document.getElementById("cx-copyjarpath").hidden = true;
         document.getElementById("cx-copyfilepath").hidden = false;
         document.getElementById("cx-copyfileurl").hidden = false;
+        // Can launch files:
+        document.getElementById("cx-launch").hidden = false;
+        document.getElementById("cx-launch-sep").hidden = false;
     }
     else if (selectedItem.scheme == "jar")
     {
@@ -275,6 +278,9 @@ function ct_popupShowing(event)
         document.getElementById("cx-copyjarpath").hidden = false;
         document.getElementById("cx-copyfilepath").hidden = true;
         document.getElementById("cx-copyfileurl").hidden = true;
+         // Can't launch jar files (yet):
+        document.getElementById("cx-launch").hidden = true;
+        document.getElementById("cx-launch-sep").hidden = true; 
     }
     //document.getElementById("cx-copycontent").setAttribute("disabled", isDir);
     //document.getElementById("cx-copycontentdata").setAttribute("disabled", isDir);

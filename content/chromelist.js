@@ -232,6 +232,16 @@ function cb_viewInTab(href)
     openUILinkIn(href, "tab");
 }
 
+chromeBrowser.launch =
+function cb_launch(item)
+{
+    // Code adapted from http://developer.mozilla.org/en/docs/Code_snippets:Running_applications
+    // Per the site, it may not be implemented on some platforms
+    var file = newObject("@mozilla.org/file/local;1", "nsILocalFile");
+    file.initWithPath(item.path);
+    file.launch();
+}
+
 ////////////////////////////////////////////////////////////////
 // Copy stuff.
 
