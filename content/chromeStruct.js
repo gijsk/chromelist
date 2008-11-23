@@ -1,11 +1,3 @@
-var chromeStructure, chromeOverrides;
-var iosvc, chromeReg, consoleService;
-
-const nsIJARURI = Components.interfaces.nsIJARURI;
-const nsIFileURL = Components.interfaces.nsIFileURL;
-const nsIZipReader = Components.interfaces.nsIZipReader;
-const nsIZipEntry = Components.interfaces.nsIZipEntry;
-
 // Maps the chrome's structure.
 // This code probably looks strange. Why not a simple for loop, you wonder?
 // Well, because even on my (somewhat fast) pc, it takes about a second to
@@ -67,22 +59,46 @@ function makeChromeTree(chromeURLs, callback, callbackParam)
             else
                 setTimeout(callback, 0, callbackParam);
         };
+        // Find a corresponding skin/locale entry
+        // xxxHack: assume it's going to be just before or just after this item
+        //          seeing as human beings tend to be quite organized!
+        function existsSkinOrLocaleDir(name, urls)
+        {
+            var startIndex = Math.max(0, currentIndex - 5);
+            var regexSkinLocale = new RegExp("^chrome://" + name + "/(skin|locale)");
+            for (var i = 0; i < urls.length; i++)
+            {
+                var realIndex = (i + startIndex) % urls.length;
+                var url = urls[realIndex][0];
+                if (regexSkinLocale.test(url))
+                    return true;
+            }
+            return false;
+        };
 
         var localURI, chromeURI;
-        var pname, ptype, m, manifest, chromeDir, desc, prob;
+        var ignoreFailedLookup = false;
+        var pname, ptype, m, manifest, flags, chromeDir, desc, prob;
 
         // Make base and package.
         m = chromeURLs[currentIndex][0].match(/^chrome\:\/\/([^\/]+)\/([^\/]+)/i);
         pname = m[1]; // Packagename
         ptype = m[2]; // Packagetype
         manifest = chromeURLs[currentIndex][1];
+        flags = chromeURLs[currentIndex][2];
+        
+        // Now, we want to ignore the fact that the target of this mapping may
+        // not exist if all of the following hold:
+        // - the package type is content
+        // - this manifest maps at least one other type of thing (skin, locale)
+        // - this line has flags
+        if ((stringTrim(flags) != "") && (ptype == "content") && existsSkinOrLocaleDir(pname, chromeURLs))
+            ignoreFailedLookup = true;
+        
+        // Do our magic:
         try
         {
-            chromeURI = iosvc.newURI(chromeURLs[currentIndex][0], null, null);
-            localURI = chromeReg.convertChromeURL(chromeURI);
-            // In some cases, you can map a chrome URL to another chrome URL - fun!
-            while (localURI.scheme == "chrome")
-                localURI = chromeReg.convertChromeURL(localURI);
+            localURI = getRealURI(chromeURLs[currentIndex][0])
         }
         catch (ex)
         {
@@ -93,14 +109,13 @@ function makeChromeTree(chromeURLs, callback, callbackParam)
             return;
         }
 
-
         if (localURI.scheme == "file")
         {
-            addFileSubs(localURI, ptype, pname, manifest);
+            addFileSubs(localURI, ptype, pname, manifest, ignoreFailedLookup);
         }
         else if (localURI.scheme == "jar")
         {
-            addJarSubs(localURI, ptype, pname, manifest);
+            addJarSubs(localURI, ptype, pname, manifest, ignoreFailedLookup);
         }
         else
         {
@@ -114,7 +129,7 @@ function makeChromeTree(chromeURLs, callback, callbackParam)
     doProcessChromeURL();
 }
 
-function addJarSubs(uri, provider, pack, manifest)
+function addJarSubs(uri, provider, pack, manifest, ignoreFailedLookup)
 {
     var desc, prob;
     var jarURI = uri.QueryInterface(nsIJARURI);
@@ -122,16 +137,7 @@ function addJarSubs(uri, provider, pack, manifest)
     var zr = newObject("@mozilla.org/libjar/zip-reader;1", nsIZipReader);
     try
     {
-        // nsIZipReader changed on trunk somewhere in the summer of 2006. Not on branch though.
-        if ("init" in zr)
-        {
-            zr.init(jarFileURL.file);
-            zr.open();
-        }
-        else
-        {
-            zr.open(jarFileURL.file);
-        }
+        zr.open(jarFileURL.file);
     }
     catch (ex)
     {
@@ -143,7 +149,10 @@ function addJarSubs(uri, provider, pack, manifest)
                     severity: "error"};
             chromeBrowser.addProblem(prob);
         }
-        logException(ex);
+        else
+        {
+            logException(ex);
+        }
         return;
     }
 
@@ -186,7 +195,7 @@ function addJarSubs(uri, provider, pack, manifest)
         cDir.addRelativeURL(relEntry, size);
     }
     
-    if (!cDir)
+    if (!cDir && !ignoreFailedLookup)
     {
         desc = getStr("problem.fileNotInJar", [provider, pack, jarFileURL.file.path]);
         prob = {desc: desc, manifest: manifest, severity: "error"};
@@ -245,7 +254,7 @@ function addFileSubs(uri, provider, pack, manifest)
 
     var prob, desc;
 
-    if (!dir.exists())
+    if (!dir.exists() && !ignoreFailedLookups)
     {
         desc = getStr("problem.noFile", [provider, pack, dir.path]);
         prob = {desc: desc, manifest: manifest, severity: "error"};
@@ -325,11 +334,10 @@ function getManifests()
 // Parse a manifest.
 function parseManifest(manifest, path)
 {
-    var line, params, rv;
+    var line, params, rv = [];
     var uriForManifest = iosvc.newURI(getURLSpecFromFile(path), null, null);
     // Pick apart the manifest line by line.
     var lines = manifest.split("\n");
-    rv = [];
     for (var i = 0; i < lines.length; i++)
     {
         line = stringTrim(lines[i]);
@@ -342,8 +350,12 @@ function parseManifest(manifest, path)
             case "content":
             case "skin":
             case "locale":
-                // push( [chrome uri, path to manifest])
-                rv.push(["chrome://" + params[1] + "/" + params[0], path]);
+                // elem looks like: [chrome uri, path to manifest, flags (if any)]
+                if (params.length > 2)
+                    params[2] = params.slice(2).join(" ");
+                else
+                    params[2] = "";
+                rv.push(["chrome://" + params[1] + "/" + params[0], path, params[2]]);
                 break;
             case "override":
                 if (params.length >= 3)
@@ -381,6 +393,12 @@ function updateOverrides(callback)
         }
         else // OK, this thing got applied. Do stuff:
         {
+            //xxxHack: unfortunately, if you do a chrome --> chrome override,
+            //         the chrome Registry just gives you back the same chrome URL.
+            //         We need to unwrap this so as to obtain a proper URI:
+            while (expectedURI.scheme == "chrome")
+                expectedURI = chromeReg.convertChromeURL(expectedURI);
+
             if (expectedURI.scheme == "file")
             {
                 overrideFile(overridden, override, manifest);
@@ -449,15 +467,7 @@ function overrideJar(overridden, override, expectedURI, manifest)
         }
 
         var zr = newObject("@mozilla.org/libjar/zip-reader;1", nsIZipReader);
-        if ("init" in zr)
-        {
-            zr.init(jarFileURL.file);
-            zr.open();
-        }
-        else
-        {
-            zr.open(jarFileURL.file);
-        }
+        zr.open(jarFileURL.file);
 
         // If we've survived opening it, check if what we really want from it:
         var path = jarURI.directory;
@@ -472,7 +482,7 @@ function overrideJar(overridden, override, expectedURI, manifest)
         }
         // Right. So does it really have this file?
         var entry;
-        // Assignment in if statement. Sue me.
+
         try {
             entry = zr.getEntry(path);
             if (!entry)
@@ -505,6 +515,16 @@ function overrideJar(overridden, override, expectedURI, manifest)
         chromeBrowser.addProblem(prob);
         return;
     }
+    /*
+     * Need: Overridden URL
+     *       What to override with
+     *       relevant manifest
+     *       actual scheme
+     *       size
+     *       check if jarfile exists
+     *       check if entry exists
+     *       check if entry is directory
+     */
 }
 
 function addOverride(overridden, override, manifest, scheme, size)
@@ -618,27 +638,11 @@ function CD_addRelativeURL(url, size)
 ChromeDirectory.prototype.getPath =
 function cd_getPath()
 {
-    if (this.scheme == "jar")
-    {
-        var file, uri;
-        try {
-            uri = iosvc.newURI(this.resolvedURI, null, null);
-            uri.QueryInterface(Components.interfaces.nsIJARURI);
-            file = getFileFromURLSpec(uri.JARFile.spec);
-        }
-        catch (ex) { logException(ex); return ""; }
-        return file.path;
+    try {
+        var path = getPathForURI(this.resolvedURI);
     }
-    if (this.scheme == "file")
-    {
-        var file;
-        try {
-            file = getFileFromURLSpec(this.resolvedURI);
-        }
-        catch (ex) { logException(ex); return ""; }
-        return file.path;
-    }
-    return "";
+    catch (ex) { logException(ex); return ""; }
+    return path;
 }
 
 ChromeDirectory.prototype.getManifest =
@@ -663,7 +667,7 @@ function ChromeFile(parent, name, size)
     this.href = this.parent.href + name;
     this.level = this.parent.level + 1;
     this.size = size;
-    var resolvedURI = chromeReg.convertChromeURL(iosvc.newURI(this.href, null, null));
+    var resolvedURI = getRealURI(this.href);
     this.scheme = resolvedURI.scheme;
     this.resolvedURI = resolvedURI.spec;
     this.path = this.getPath();
@@ -689,9 +693,3 @@ function cf_getManifest()
 // Same as for directories
 ChromeFile.prototype.getPath = ChromeDirectory.prototype.getPath;
 ///////////////////
-
-function logException (ex)
-{
-    // FIXME: logException doesn't do anything yet.
-    dump(ex)
-}

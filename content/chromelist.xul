@@ -10,6 +10,8 @@
         width="640"
         height="480"
         persist="width height screenX screenY sizemode">
+        <script type="application/x-javascript" src="chrome://chromelist/content/global-vars.js"></script>
+        <script type="application/x-javascript" src="chrome://chromelist/content/url-utils.js"></script>
         <script type="application/x-javascript" src="chrome://chromelist/content/file-utils.js"></script>
         <script type="application/x-javascript" src="chrome://chromelist/content/utils.js"></script>
         <script type="application/x-javascript" src="chrome://global/content/contentAreaUtils.js"></script>

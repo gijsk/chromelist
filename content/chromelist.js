@@ -1,19 +1,9 @@
-var chrometree, chromedirtree;
-const ThunderbirdUUID = "{3550f703-e582-4d05-9a08-453d09bdfdc6}";
-const FirefoxUUID = "{ec8030f7-c20a-464f-9b0e-13a3a9e97384}";
-const XHTML_NS = "http://www.w3.org/1999/xhtml";
+// Main UI JS
 
+// Starts the whole thing
 function onLoad()
 {
-    chrometree = document.getElementById("chrometree");
-    chromedirtree = document.getElementById("chromedirtree");
-    iosvc = getService("@mozilla.org/network/io-service;1", "nsIIOService");
-    chromeReg = getService("@mozilla.org/chrome/chrome-registry;1",
-                           "nsIToolkitChromeRegistry");
-    
-    consoleService = getService("@mozilla.org/consoleservice;1",
-                                "nsIConsoleService");
-
+    initGlobalVars();
     chrometree.view = chromeTree;
     chromedirtree.view = chromeDirTree;
     
@@ -22,6 +12,7 @@ function onLoad()
     setTimeout(refreshChromeList, 0, onLoadDone);
 }
 
+// Basically finishes starting up after we've done all the background loading
 function onLoadDone()
 {
     setStatusText(getStr("info.status.done"));
@@ -33,6 +24,7 @@ function onLoadDone()
         document.getElementById("problem-button").setAttribute("disabled", false);
 }
 
+// Close up shop:
 function onUnload()
 {
     chrometree.view = null;

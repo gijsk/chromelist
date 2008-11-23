@@ -195,50 +195,6 @@ function dumpObjectTree (o, recurse, compress, level)
     return s;
 }
 
-function getFileFromURLSpec(url)
-{
-    const nsIFileProtocolHandler = Components.interfaces.nsIFileProtocolHandler;
-    var handler = iosvc.getProtocolHandler("file");
-    handler = handler.QueryInterface(nsIFileProtocolHandler);
-    return handler.getFileFromURLSpec(url);
-}
-
-function getURLSpecFromFile (file)
-{
-    if (!file)
-        return null;
-
-    const IOS_CTRID = "@mozilla.org/network/io-service;1";
-    const nsIIOService = Components.interfaces.nsIIOService;
-
-    if (typeof file == "string")
-        file = localFile(file);
-
-    var service = Components.classes[IOS_CTRID].getService(nsIIOService);
-    var nsIFileProtocolHandler = Components.interfaces.nsIFileProtocolHandler;
-    var fileHandler = service.getProtocolHandler("file");
-    fileHandler = fileHandler.QueryInterface(nsIFileProtocolHandler);
-    return fileHandler.getURLSpecFromFile(file);
-}
-
-
-// This would be my own cruft:
-
-function localFile(path)
-{
-    const LOCALFILE_CTRID = "@mozilla.org/file/local;1";
-    const nsILocalFile = Components.interfaces.nsILocalFile;
-
-    if (typeof path == "string")
-    {
-        var fileObj =
-            Components.classes[LOCALFILE_CTRID].createInstance(nsILocalFile);
-        fileObj.initWithPath(path);
-        return fileObj;
-    }
-    return null;
-}
-
 function glimpseEscape(str)
 {
     return str.replace(/([\$\^\*\[\|\(\)\!\\;,#><\-.])/g, "\\$1");
@@ -271,3 +227,8 @@ function setStatusProgress(n)
     }
 }
 
+function logException (ex)
+{
+    // FIXME: logException doesn't do anything yet.
+    dump(ex)
+}
