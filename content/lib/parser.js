@@ -169,8 +169,8 @@ function addJarSubs(uri, provider, pack, manifest, ignoreFailedLookup)
         return;
     }
 
-    var relativeDir = jarURI.directory;
-    relativeDir = (/^\//).test(relativeDir) ? relativeDir.substr(1) : relativeDir;
+    var relativeDir = jarURI.JAREntry;
+    relativeDir = (relativeDir[0] == "/") ? relativeDir.substr(1) : relativeDir;
     
     var entries = zr.findEntries(relativeDir + "*");
     var cDir = null;
@@ -483,7 +483,7 @@ function overrideJar(overridden, override, expectedURI, manifest)
         zr.open(jarFileURL.file);
 
         // If we've survived opening it, check if what we really want from it:
-        var path = jarURI.directory;
+        var path = jarURI.JAREntry;
         path = (path[0] == "/") ? path.substr(1) : path;
         // Oh, right. Don't try a directory. That's useless for overrides.
         if (path[path.length - 1] == "/")

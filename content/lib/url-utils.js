@@ -18,8 +18,14 @@ function getMappedURI(uri)
 function getRealURI(uri)
 {
     if (typeof uri == "string")
-        return iosvc.newChannel(uri, null, null).URI;
-    return iosvc.newChannelFromURI(uri).URI;
+        uri = iosvc.newURI(uri, null, null)
+    
+    while (uri.scheme == "chrome")
+        uri = chromeReg.convertChromeURL(uri);
+    return uri;
+    //if (typeof uri == "string")
+    //    return iosvc.newChannel(uri, null, null).URI;
+    //return iosvc.newChannelFromURI(uri).URI;
 }
 
 /**
