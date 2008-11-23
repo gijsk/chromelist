@@ -169,7 +169,7 @@ function addJarSubs(uri, provider, pack, manifest, ignoreFailedLookup)
         return;
     }
 
-    var relativeDir = jarURI.JAREntry;
+    var relativeDir = jarURI.directory;
     relativeDir = (relativeDir[0] == "/") ? relativeDir.substr(1) : relativeDir;
     
     var entries = zr.findEntries(relativeDir + "*");
