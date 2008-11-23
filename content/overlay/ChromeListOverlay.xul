@@ -5,7 +5,7 @@
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
 <script type="application/x-javascript"
-        src="chrome://chromelist/content/ChromeListOverlay.js" />
+        src="chrome://chromelist/content/overlay/ChromeListOverlay.js" />
 
 <menupopup id="menu_ToolsPopup">
 	<menuitem insertafter="devToolsSeparator" label="&chromelist.menu;"
