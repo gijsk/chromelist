@@ -7,6 +7,7 @@
 function refreshChromeList(callback)
 {
     chromeStructure = null;
+    //xxxGijs: trigger GC here?
     chromeStructure = new ChromeStructure();
     chromeOverrides = [];
     var f, contents;
@@ -16,7 +17,9 @@ function refreshChromeList(callback)
     var manifs = getManifests();
     var numberOfManifests = manifs.length;
     var currentManifest = 0;
+    // Reset status progress bar
     setStatusProgress(0);
+    // Start doing the thing - with a 0 timeout
     setTimeout(doParseManifest, 0);
 
 
@@ -33,6 +36,7 @@ function refreshChromeList(callback)
         if (currentManifest % 10 == 0)
             setStatusProgress(Math.floor(25 * currentManifest / numberOfManifests));
 
+        // Increment and parse some more - or start constructing the tree
         currentManifest++;
         if (currentManifest < numberOfManifests)
             setTimeout(doParseManifest, 0);
@@ -41,6 +45,13 @@ function refreshChromeList(callback)
     };
 }
 
+/**
+ * Construct the chrome tree
+ * @param chromeURLs the list of chrome URLs we have
+ * @param callback a function to call when we're done
+ * @param callbackParam a parameter for the callback function (which is, in fact, another callback function)
+ * @returns nothing!
+ */
 function makeChromeTree(chromeURLs, callback, callbackParam)
 {
     var currentIndex = 0;
@@ -59,6 +70,7 @@ function makeChromeTree(chromeURLs, callback, callbackParam)
             else
                 setTimeout(callback, 0, callbackParam);
         };
+
         // Find a corresponding skin/locale entry
         // xxxHack: assume it's going to be just before or just after this item
         //          seeing as human beings tend to be quite organized!
@@ -78,12 +90,12 @@ function makeChromeTree(chromeURLs, callback, callbackParam)
 
         var localURI, chromeURI;
         var ignoreFailedLookup = false;
-        var pname, ptype, m, manifest, flags, chromeDir, desc, prob;
+        var pname, ptype, matches, manifest, flags, chromeDir, desc, prob;
 
         // Make base and package.
-        m = chromeURLs[currentIndex][0].match(/^chrome\:\/\/([^\/]+)\/([^\/]+)/i);
-        pname = m[1]; // Packagename
-        ptype = m[2]; // Packagetype
+        matches = chromeURLs[currentIndex][0].match(/^chrome\:\/\/([^\/]+)\/([^\/]+)/i);
+        pname = matches[1]; // Packagename
+        ptype = matches[2]; // Packagetype
         manifest = chromeURLs[currentIndex][1];
         flags = chromeURLs[currentIndex][2];
         
@@ -109,6 +121,7 @@ function makeChromeTree(chromeURLs, callback, callbackParam)
             return;
         }
 
+        // Now that we have the location, add everything there into our tree
         if (localURI.scheme == "file")
         {
             addFileSubs(localURI, ptype, pname, manifest, ignoreFailedLookup);
