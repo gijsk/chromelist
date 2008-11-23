@@ -18,9 +18,8 @@
         <script type="application/x-javascript" src="chrome://chromelist/content/lib/parser.js"></script>
         <script type="application/x-javascript" src="chrome://global/content/contentAreaUtils.js"></script>
         <script type="application/x-javascript" src="chrome://chromelist/content/chromelist.js"></script>
-
-        <script type="application/x-javascript" src="chrome://chromelist/content/chromeDirTree.js"></script>
-        <script id="last-script" type="application/x-javascript" src="chrome://chromelist/content/chromeTree.js"></script>
+        <script type="application/x-javascript" src="chrome://chromelist/content/ui/chromeDirTree.js"></script>
+        <script type="application/x-javascript" src="chrome://chromelist/content/ui/chromeTree.js" id="last-script"></script>
         <stringbundleset>
           <stringbundle id="locale-strings" src="chrome://chromelist/locale/chromelist.properties"/>
         </stringbundleset>

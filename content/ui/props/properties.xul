@@ -14,7 +14,7 @@
         orient="vertical"
         screenX="24" screenY="24">
 
-  <script type="application/x-javascript" src="chrome://chromelist/content/properties.js"></script>
+  <script type="application/x-javascript" src="properties.js"></script>
 
   <keyset id="dialogKeys"/>
 
