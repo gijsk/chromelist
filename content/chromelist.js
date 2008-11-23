@@ -280,7 +280,7 @@ chromeBrowser.showProperties =
 function cb_properties(item)
 {
     var windowArgs = "scrollbars,chrome,resizable,dialog=no";
-    window.openDialog("chrome://chromelist/content/properties.xul", "_blank", windowArgs, item);
+    window.openDialog("chrome://chromelist/content/ui/props/properties.xul", "_blank", windowArgs, item);
 }
 
 chromeBrowser.host = "Unknown";

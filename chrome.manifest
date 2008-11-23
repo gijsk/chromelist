@@ -1,5 +1,5 @@
 content   chromelist                                content/
 skin      chromelist       modern/1.0               skin/
 locale    chromelist       en-US                    locale/
-overlay   chrome://browser/content/browser.xul      chrome://chromelist/content/ui/ChromeListOverlay.xul
-overlay   chrome://messenger/content/messenger.xul  chrome://chromelist/content/ui/ChromeListOverlay.xul
+overlay   chrome://browser/content/browser.xul      chrome://chromelist/content/overlay/ChromeListOverlay.xul
+overlay   chrome://messenger/content/messenger.xul  chrome://chromelist/content/overlay/ChromeListOverlay.xul
