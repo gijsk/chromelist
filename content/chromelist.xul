@@ -10,13 +10,15 @@
         width="640"
         height="480"
         persist="width height screenX screenY sizemode">
-        <script type="application/x-javascript" src="chrome://chromelist/content/global-vars.js"></script>
-        <script type="application/x-javascript" src="chrome://chromelist/content/url-utils.js"></script>
-        <script type="application/x-javascript" src="chrome://chromelist/content/file-utils.js"></script>
-        <script type="application/x-javascript" src="chrome://chromelist/content/utils.js"></script>
+        <script type="application/x-javascript" src="chrome://chromelist/content/lib/global-vars.js"></script>
+        <script type="application/x-javascript" src="chrome://chromelist/content/lib/url-utils.js"></script>
+        <script type="application/x-javascript" src="chrome://chromelist/content/lib/file-utils.js"></script>
+        <script type="application/x-javascript" src="chrome://chromelist/content/lib/utils.js"></script>
+        <script type="application/x-javascript" src="chrome://chromelist/content/lib/structure.js"></script>
+        <script type="application/x-javascript" src="chrome://chromelist/content/lib/parser.js"></script>
         <script type="application/x-javascript" src="chrome://global/content/contentAreaUtils.js"></script>
         <script type="application/x-javascript" src="chrome://chromelist/content/chromelist.js"></script>
-        <script type="application/x-javascript" src="chrome://chromelist/content/chromeStruct.js"></script>
+
         <script type="application/x-javascript" src="chrome://chromelist/content/chromeDirTree.js"></script>
         <script id="last-script" type="application/x-javascript" src="chrome://chromelist/content/chromeTree.js"></script>
         <stringbundleset>
