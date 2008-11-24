@@ -216,7 +216,7 @@ function addJarSubs(uri, provider, pack, manifest, ignoreFailedLookup)
     }
 }
 
-function addFileSubs(uri, provider, pack, manifest)
+function addFileSubs(uri, provider, pack, manifest, ignoreFailedLookup)
 {
     function parseLocalDir(entries, cDir, dirPath)
     {
@@ -267,7 +267,7 @@ function addFileSubs(uri, provider, pack, manifest)
 
     var prob, desc;
 
-    if (!dir.exists() && !ignoreFailedLookups)
+    if (!dir.exists() && !ignoreFailedLookup)
     {
         desc = getStr("problem.noFile", [provider, pack, dir.path]);
         prob = {desc: desc, manifest: manifest, severity: "error"};
