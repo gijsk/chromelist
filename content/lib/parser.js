@@ -397,8 +397,11 @@ function updateOverrides(callback)
         override = chromeOverrides[i][1];
         manifest = chromeOverrides[i][2];
         overriddenURI = iosvc.newURI(overridden, null, null);
-        expectedURI = chromeReg.convertChromeURL(overriddenURI);
-        if (expectedURI.spec != override)
+        try {
+            expectedURI = chromeReg.convertChromeURL(overriddenURI);
+        }
+        catch (ex) { /* If this fails, the chrome URI being overridden does not exist: */}
+        if (!expectedURI || (expectedURI.spec != override))
         {
             desc = getStr("problem.override.notApplied", [overridden, override]);
             prob = {desc: desc, manifest: manifest, severity: "warning"};
