@@ -375,3 +375,39 @@ function fo_close()
 {
     return this.outputStream.flush();
 }
+
+
+function writeFileToJar(jarFilePath, entryPath, filePath)
+{
+    const PR_RDONLY      = 0x01;
+    const PR_WRONLY      = 0x02;
+    const PR_RDWR        = 0x04;
+    const PR_CREATE_FILE = 0x08;
+    const PR_APPEND      = 0x10;
+    const PR_TRUNCATE    = 0x20;
+    const PR_SYNC        = 0x40;
+    const PR_EXCL        = 0x80;
+
+    var zipWriter = Components.Constructor("@mozilla.org/zipwriter;1", "nsIZipWriter");
+    var zipW = new zipWriter();
+
+    var jarFile = nsLocalFile(jarFilePath);
+    zipW.open(jarFile, PR_RDWR);
+    if (zipW.hasEntry(entryPath))
+        zipW.removeEntry(entryPath, false);
+    zipW.addEntryFile(entryPath,
+                      Components.interfaces.nsIZipWriter.COMPRESSION_NONE, filePath, false);
+    zipW.close();
+    
+    // Now for some magic. Mozilla caches lots of stuff for JARs, so as to enable faster read/write.
+    // Unfortunately, that screws us over in this case, as it will have an open copy of a zipreader
+    // somewhere that's stuck with the old pointers to files in the JAR. If we don't fix this,
+    // lots of things break as they can't find the right files in the JAR anymore.
+    // So, we will find this zipreader, close it and reopen it. It will then re-read the
+    // zipfile, and will then work correctly. Hopefully.
+    var jarProtocolHandler = iosvc.getProtocolHandler("jar").QueryInterface(Components.interfaces.nsIJARProtocolHandler);
+    var jarCache = jarProtocolHandler.JARCache;
+    var ourReader = jarCache.getZip(jarFile);
+    ourReader.close();
+    ourReader.open(jarFile);
+}

@@ -67,7 +67,7 @@ function getDirInJAR(uri)
     if (typeof uri == "string")
         uri = iosvc.newURI(uri, null, null);
     uri.QueryInterface(Components.interfaces.nsIJARURI);
-    // FIXME
+    return uri.JAREntry;
 }
 
 function getFileFromURLSpec(url)

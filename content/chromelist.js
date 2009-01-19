@@ -131,6 +131,8 @@ function cb_getPref(prefName)
                 return this.prefBranch.getBoolPref(prefName);
             case Components.interfaces.nsIPrefBranch.PREF_STRING:
                 return this.prefBranch.getCharPref(prefName);
+            default:
+                throw "Unknown pref type: " + type + " !?";
         }
     }
     catch (ex)
@@ -139,6 +141,31 @@ function cb_getPref(prefName)
         return null;
     }
     return null; // Keep js happy (strict warning otherwise)
+}
+
+chromeBrowser.setPref =
+function cb_setPref(prefName, newValue)
+{
+    var type = this.prefBranch.getPrefType(prefName);
+    try
+    {
+        switch (type)
+        {
+            case Components.interfaces.nsIPrefBranch.PREF_INT:
+                return this.prefBranch.setIntPref(prefName, newValue);
+            case Components.interfaces.nsIPrefBranch.PREF_BOOL:
+                return this.prefBranch.setBoolPref(prefName, newValue);
+            case Components.interfaces.nsIPrefBranch.PREF_STRING:
+                return this.prefBranch.setCharPref(prefName, newValue);
+            default:
+                throw "Unknown pref type: " + type + " !?";
+        }
+    }
+    catch (ex)
+    {
+        logException(ex);
+        return null;
+    }
 }
 
 ////////////////////////////////////////////////////////////////
@@ -261,6 +288,76 @@ function cb_saveAs(href)
         return;
     }
     saveURL(href, null, null, false, false, null);
+}
+
+chromeBrowser.replace =
+function cb_replace(item)
+{
+    var path = item.path;
+    // Check if user really wants to do this:
+    if (this.getPref("replace.prompt"))
+    {
+        var alwaysPrompt = {value: true};
+        var reply = confirmEx(getStr("replace.confirm"),
+                              [getStr("replace.confirm.replace"), getStr("replace.confirm.cancel")],
+                              0,
+                              getStr("replace.confirm.remind"), alwaysPrompt,
+                              window,
+                              getStr("replace.confirm.title"));
+        if (reply == 1)
+            return;
+        this.setPref("replace.prompt", alwaysPrompt.value);
+    }
+
+    // So we continue:
+    var originalExtIndex  = item.leafName.lastIndexOf(".");
+    var fileExtension = item.leafName.substring(originalExtIndex + 1);
+    var filters = [[fileExtension.toUpperCase() + " files", "*." + fileExtension]];
+    var filePickerResult = pickOpen(null, filters, item.leafName);
+    if (filePickerResult.reason != PICK_OK)
+        return;
+    try {
+        if (item.scheme == "jar")
+            this._replaceFileInJar(path, getDirInJAR(item.resolvedURI), filePickerResult.file);
+        else
+            this._replaceFile(path, filePickerResult.file);
+    }
+    catch (ex)
+    {
+        logException(ex);
+        alert(getStr("error.replacing.file", [formatException(ex)]));
+    }
+}
+
+chromeBrowser._replaceFile =
+function cb_internalReplaceFile(destPath, sourceFile)
+{
+    var f = nsLocalFile(destPath);
+    var originalF = nsLocalFile(destPath);
+    var targetName = f.leafName;
+    // What can I say, the copyTo API sucks. It won't overwrite files, ever.
+    // So, we try to do our own logic here...
+    // First, move the file to a unique name:
+    f.createUnique(0, 0700);
+    originalF.moveTo(null, f.leafName);
+    // Then, try to copy the new file.
+    try {
+        sourceFile.copyTo(f.parent, targetName);
+    }
+    catch (ex)
+    {
+        // If this fails, move the backup back, and re-throw the exception.
+        f.moveTo(null, targetName);
+        throw ex;
+    }
+}
+
+chromeBrowser._replaceFileInJar =
+function cb_internalReplaceFileInJar(jarPath, jarEntry, filePath)
+{
+    // FIXME this should copy to temp, replace, and then copy back, to avoid
+    // quota restrictions and so on.
+    writeFileToJar(jarPath, jarEntry, filePath);
 }
 
 // LXR stuff.

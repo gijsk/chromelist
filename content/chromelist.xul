@@ -116,6 +116,9 @@
           <menuseparator/>
           <menuitem id="cx-saveas" label="&cx.save-as;" accesskey="&cx.save-as.accesskey;"
                     oncommand="chromeBrowser.saveAs(chromeTree.getCurrentHref());"/>
+          <menuitem id="cx-replace" label="&cx.replace;" accesskey="&cx.replace.accesskey;"
+                    oncommand="chromeBrowser.replace(chromeTree.getCurrentItem());"/>
+          <menuseparator id="cx-replace-sep"/>
           <menuitem id="cx-properties" label="&cx.properties;" accesskey="&cx.properties.accesskey;"
                     oncommand="chromeBrowser.showProperties(chromeTree.getCurrentItem());"/>
 
