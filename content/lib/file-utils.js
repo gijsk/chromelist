@@ -376,7 +376,12 @@ function fo_close()
     return this.outputStream.flush();
 }
 
-
+/**
+ * Write a file to a jar
+ * @param jarFilePath {string} the path to the jar to write to
+ * @param entryPath {string} the path of the file in the jar to write to
+ * @param filePath {string} the path to the file that needs to be put in the jar
+ */
 function writeFileToJar(jarFilePath, entryPath, filePath)
 {
     const PR_RDONLY      = 0x01;
