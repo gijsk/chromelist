@@ -260,6 +260,45 @@ function arrayHasElementAt(ary, i)
     return typeof ary[i] != "undefined";
 }
 
+function equalsObject(o1, o2, path)
+{
+    if (!path)
+        path = "o1";
+    for (var p in o1)
+    {
+        // Recursing forever is pretty non-funny:
+        if (p == "parent")
+            continue;
+
+        if (!(p in o2))
+        {
+            throw path + "." + p + " does not occur in " + path.replace(/^o1/, "o2");
+            return false;
+        }
+        
+        if (typeof o1[p] == "object")
+        {
+            if (!equalsObject(o1[p], o2[p], path + "." + p))
+                return false;
+        }
+        else if (o1[p] != o2[p])
+        {
+            throw path + "." + p + " is " + String(o1[p]) + " while in o2 it is " + String(o2[p]);
+            return false;
+        }
+    }
+    for (p in o2)
+    {
+        // If the property did exist in o1, the previous loop tested it:
+        if (!(p in o1))
+        {
+            throw path + "." + p + " does not occur in " + path.replace(/^o1/, "o2");
+            return false;
+        }
+    }
+    return true;
+}
+
 function isinstance(inst, base)
 {
     /* Returns |true| if |inst| was constructed by |base|. Not 100% accurate,
