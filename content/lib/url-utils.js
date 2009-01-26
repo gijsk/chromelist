@@ -30,8 +30,8 @@ function getRealURI(uri)
 
 /**
  * Get a path to the jar file for a given jar: URI
- * @param uri the string or nsIURI uri to get a file path for
- * @returns the corresponding URI
+ * @param uri {nsIURI OR string} the string or nsIURI uri to get a file path for
+ * @returns {string} the corresponding path
  */
 function getJARFileForURI(uri)
 {
@@ -70,6 +70,43 @@ function getDirInJAR(uri)
     return uri.JAREntry;
 }
 
+/**
+ * Get an enumerator for the entries in a dir in a JAR:
+ * @param uri {nsIJARURI} the jar URI to find entries for
+ * @returns {nsISimpleEnumerator} an enumerator of the entries.
+ * @note modelled after nsJARDirectoryInputStream::Init
+ */
+function getEntriesInJARDir(uri)
+{
+    uri.QueryInterface(Components.interfaces.nsIJARURI);
+    var zr = newObject("@mozilla.org/libjar/zip-reader;1",
+                       Components.interfaces.nsIZipReader);
+    zr.open(uri.JARFile);
+    var strEntry = uri.JAREntry;
+    // Be careful about empty entry (root of jar); nsIZipReader.getEntry balks
+    if (strEntry)
+    {
+        var realEntry = zr.getEntry(strEntry);
+        if (!realEntry.isDirectory)
+                throw strEntry + " is not a directory!";
+    }
+
+    var escapedEntry = escapeJAREntryForFilter(strEntry);
+
+    var filter = escapedEntry + "?*~" + escapedEntry + "?*/?*";
+    return zr.findEntries(filter);
+}
+
+/**
+ * Escape all the characters that have a special meaning for nsIZipReader's special needs.
+ * @param {string} original entry name
+ * @returns {string} escaped entry name
+ */
+function escapeJAREntryForFilter(entryName)
+{
+    return entryName.replace(/([\*\?\$\[\]\^\~\(\)\\])/g, "\\$1");
+}
+
 function getFileFromURLSpec(url)
 {
     const nsIFileProtocolHandler = Components.interfaces.nsIFileProtocolHandler;
@@ -78,6 +115,11 @@ function getFileFromURLSpec(url)
     return handler.getFileFromURLSpec(url);
 }
 
+/**
+ * Get the spec of the URL from a file.
+ * @param file {nsIFile OR string} the path to the file, or a file object
+ * @returns the URL spec for the file.
+ */
 function getURLSpecFromFile (file)
 {
     if (!file)
@@ -96,6 +138,11 @@ function getURLSpecFromFile (file)
     return fileHandler.getURLSpecFromFile(file);
 }
 
+/**
+ * Create a local file from a path
+ * @param path {string} the path to the file
+ * @returns {nsILocalFile} the local file object
+ */
 function localFile(path)
 {
     const LOCALFILE_CTRID = "@mozilla.org/file/local;1";

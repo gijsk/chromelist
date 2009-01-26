@@ -54,7 +54,11 @@ function ChromeDirectory(someParent, name, manifest)
     }
     this.directories = new Object();
     this.files = new Object();
-    this.manifest = manifest;
+    if (manifest)
+        this.manifest = manifest;
+    else
+        this.manifest = this.parent.manifest;
+
     this.path = this.getPath();
     this.leafName = decodeURIComponent(name);
 }
