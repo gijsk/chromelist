@@ -83,6 +83,7 @@ function cb_initAppCompat()
     
     switch (app.ID)
     {
+        case FlockUUID:
         case FirefoxUUID:
              this.host = "Firefox";
              break;
