@@ -406,6 +406,8 @@ function cb_internalReplaceFile(destPath, sourceFile)
         f.moveTo(null, targetName);
         throw ex;
     }
+    // If we get here, we managed: destroy the original (moved) file:
+    originalF.remove(false);
 }
 
 chromeBrowser._replaceFileInJar =
