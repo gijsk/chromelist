@@ -17,4 +17,11 @@ function onLoad()
     else
         document.getElementById("file-size-text").value = file.size/1000 + " KB";
     document.getElementById("manifest-text").value = file.getManifest();
+
+    var flags;
+    if (file.TYPE == "ChromeFile")
+        flags = file.parent.flags;
+    else
+        flags = file.flags;
+    document.getElementById("flags-text").value = flags;
 }

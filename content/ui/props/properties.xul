@@ -57,6 +57,11 @@
         <label value="&props.manifest.label; "/>
         <textbox readonly="true" id="manifest-text"/>
       </row>
+      <row id="flags">
+        <separator orient="vertical"/>
+        <label value="&props.flags.label; "/>
+        <textbox readonly="true" id="flags-text"/>
+      </row>
     </rows>
   </grid>
   <separator/>

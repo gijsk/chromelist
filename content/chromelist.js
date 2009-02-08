@@ -6,10 +6,13 @@ function onLoad()
     initGlobalVars();
     chrometree.view = chromeTree;
     chromedirtree.view = chromeDirTree;
-    
+
+    chromeBrowser.chromeStructure = new ChromeStructure();
+    chromeBrowser.newChromeStructure = null;
+
     chromeBrowser.init();
     setStatusText(getStr("info.status.reading.manifests"));
-    setTimeout(refreshChromeList, 0, onLoadDone);
+    setTimeout(refreshChromeList, 0, chromeBrowser.chromeStructure, onLoadDone);
 }
 
 // Basically finishes starting up after we've done all the background loading
@@ -17,11 +20,11 @@ function onLoadDone()
 {
     setStatusText(getStr("info.status.done"));
     setStatusProgress(-1);
+
     chromeTree.currentURL = "chrome://";
     chromeDirTree.changeDir("chrome://");
-    
-    if (chromeBrowser.foundProblems)
-        document.getElementById("problem-button").setAttribute("disabled", false);
+
+    chromeBrowser.processPossibleProblems();
 }
 
 // Close up shop:
@@ -116,6 +119,42 @@ function cb_addProblem(problem)
     var error = chromeError(problem.desc, problem.manifest, problem.severity);
     consoleService.logMessage(error);
     this.foundProblems = true;
+}
+
+chromeBrowser.addPossibleProblem =
+function cb_addPossibleProblem(problem)
+{
+    if (!this.delayedProblems)
+        this.delayedProblems = [];
+    this.delayedProblems.push(problem);
+}
+
+// We post-procress problems that might not be problems: if you added content
+// providers with flags, and they don't exist, but there are skin and/or locale
+// providers, we should silently ignore the error.
+chromeBrowser.processPossibleProblems =
+function cb_processPossibleProblems()
+{
+    for (var i = 0; i < this.delayedProblems.length; i++)
+    {
+        var p = this.delayedProblems[i];
+        // Only content providers may get ignored
+        if (!((/content\/?$/).test(p.url)) || (stringTrim(p.flags) == ""))
+        {
+            this.addProblem(p);
+            continue;
+        }
+
+        // and only if there are other providers that did work out:
+        var pack = p.url.match(/^chrome:\/\/([^\/]+)/)[1];
+        var packDirs = this.chromeStructure.directories[pack].directories;
+        if ("skin" in packDirs || "locale" in packDirs)
+            continue;
+        // Otherwise, this is a problem:
+        this.addProblem(p);
+    }
+    if (this.foundProblems)
+        document.getElementById("problem-button").setAttribute("disabled", false);
 }
 
 chromeBrowser.getPref =

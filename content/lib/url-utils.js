@@ -81,7 +81,7 @@ function getEntriesInJARDir(uri)
     uri.QueryInterface(Components.interfaces.nsIJARURI);
     var zr = newObject("@mozilla.org/libjar/zip-reader;1",
                        Components.interfaces.nsIZipReader);
-    zr.open(uri.JARFile);
+    zr.open(uri.JARFile.QueryInterface(Components.interfaces.nsIFileURL).file);
     var strEntry = uri.JAREntry;
     // Be careful about empty entry (root of jar); nsIZipReader.getEntry balks
     if (strEntry)
@@ -94,7 +94,7 @@ function getEntriesInJARDir(uri)
     var escapedEntry = escapeJAREntryForFilter(strEntry);
 
     var filter = escapedEntry + "?*~" + escapedEntry + "?*/?*";
-    return zr.findEntries(filter);
+    return [zr, zr.findEntries(filter)];
 }
 
 /**

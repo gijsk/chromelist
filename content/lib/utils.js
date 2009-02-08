@@ -292,7 +292,7 @@ function equalsObject(o1, o2, path)
         // If the property did exist in o1, the previous loop tested it:
         if (!(p in o1))
         {
-            throw path + "." + p + " does not occur in " + path.replace(/^o1/, "o2");
+            throw path.replace(/^o1/, "o2") + "." + p + " does not occur in " + path;
             return false;
         }
     }

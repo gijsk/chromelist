@@ -152,7 +152,7 @@ function cdt_toggleOpenState(row)
         }
         else // Awwwww. :-(. Well, let's do it the hard way then.
         {
-            var dirNode = chromeStructure.findURL(this.data[row].href);
+            var dirNode = chromeBrowser.chromeStructure.findURL(this.data[row].href);
             var subDirs = [];
             for (var k in dirNode.directories)
             {
@@ -217,9 +217,9 @@ function cdt_changeDir(href, forceOpen)
     if (this.data.length == 0) // We need to create the full data array first.
     {
         var elemsAdded = 0;
-        for (var dir in chromeStructure.directories)
+        for (var dir in chromeBrowser.chromeStructure.directories)
         {
-            var dirObj = chromeStructure.directories[dir];
+            var dirObj = chromeBrowser.chromeStructure.directories[dir];
             this.data.push( {leafName: dir, parent: "", href: dirObj.href, open: false, level: dirObj.level,
                              empty: false, children: null, hasNext:false, parentIndex: -1} );
             elemsAdded++;

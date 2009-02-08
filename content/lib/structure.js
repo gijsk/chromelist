@@ -4,10 +4,16 @@
 
 ///////////////////
 // ChromeStructure
-function ChromeStructure() {}
+function ChromeStructure()
+{
+    this.overrides = [];
+    this.directories = {};
+}
+
 ChromeStructure.prototype.TYPE = "ChromeStructure";
 ChromeStructure.prototype.isDirectory = true;
-ChromeStructure.prototype.directories = {};
+ChromeStructure.prototype.directories = null;
+ChromeStructure.prototype.overrides = null;
 ChromeStructure.prototype.parent = null;
 ChromeStructure.prototype.href = "chrome://";
 ChromeStructure.prototype.level = 0;
@@ -34,7 +40,7 @@ function cs_findURL(url)
 // ChromeDirectory
 // Constructor
 // Note: name is expected to be URI-encoded
-function ChromeDirectory(someParent, name, manifest)
+function ChromeDirectory(someParent, name, manifest, flags)
 {
     this.parent = someParent;
     this.href = this.parent.href + name + "/";
@@ -58,6 +64,13 @@ function ChromeDirectory(someParent, name, manifest)
         this.manifest = manifest;
     else
         this.manifest = this.parent.manifest;
+
+    if (flags)
+        this.flags = flags;
+    else if (this.level > 2)
+        this.flags = this.parent.flags;
+    else
+        this.flags = "";
 
     this.path = this.getPath();
     this.leafName = decodeURIComponent(name);
