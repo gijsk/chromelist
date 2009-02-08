@@ -379,6 +379,7 @@ function addSubs(chromeStructure, cDir)
             if (c.TYPE == "ChromeDirectory")
             {
                 currentCDir.directories[c.leafName] = c;
+                // If the item c is a ChromeDirectory, we need to recurse:
                 nextRound.push(c);
             }
             else
@@ -408,6 +409,8 @@ function chromeChildrenGenerator(chromeStructure, cDir)
 
     var parentSpec = realURL.spec.replace(/[^\/]+$/, "");
     realURL = iosvc.newURI(parentSpec, null, null);
+    // Create a generator for the actual thing. If we don't recognize the protocol,
+    // error out.
     var innerGen;
     if (realURL.scheme == "jar")
     {
@@ -424,6 +427,7 @@ function chromeChildrenGenerator(chromeStructure, cDir)
         chromeBrowser.addProblem(prob);
     }
 
+    // Yield everything from the inner generator back to whatever is using us.
     for (var r in innerGen)
         yield r;
     return;
@@ -443,7 +447,6 @@ function jarChildrenGenerator(chromeStructure, cDir, realURL)
     }
     catch (ex)
     {
-        // FIXME deal with all the errors.
         if (ex && ex.result)
         {
             if (ex.result == Components.results.NS_ERROR_FILE_TARGET_DOES_NOT_EXIST)
@@ -501,7 +504,6 @@ function fileChildrenGenerator(chromeStructure, cDir, realURL)
         desc = getStr("problem.noFile", [cDir.href, f.path]);
         prob = {desc: desc, manifest: cDir.manifest, severity: "error",
                 url: cDir.href, flags: cDir.flags};
-        // FIXME document!
         chromeBrowser.addPossibleProblem(prob);
         delete cDir.parent.directories[cDir.leafName];
         return;

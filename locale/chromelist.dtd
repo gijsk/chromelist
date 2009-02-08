@@ -31,6 +31,8 @@
 <!ENTITY     cx.launch.accesskey            "L">
 <!ENTITY     cx.view-source                 "View Source">
 <!ENTITY     cx.view-source.accesskey       "S">
+<!ENTITY     cx.refresh                     "Refresh">
+<!ENTITY     cx.refresh.accesskey           "R">
 
 <!ENTITY     cx.copy                        "Copy">
 <!ENTITY     cx.copy.chrome                 "Chrome URL">
@@ -52,7 +54,7 @@
 <!ENTITY     cx.save-as                     "Save As...">
 <!ENTITY     cx.save-as.accesskey           "A">
 <!ENTITY     cx.replace                     "Replace...">
-<!ENTITY     cx.replace.accesskey           "R">
+<!ENTITY     cx.replace.accesskey           "E">
 <!ENTITY     cx.lxr                         "Find file in LXR">
 <!ENTITY     cx.lxr.accesskey               "L">
 

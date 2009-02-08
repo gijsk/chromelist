@@ -301,6 +301,20 @@ function cb_launch(item)
     file.launch();
 }
 
+chromeBrowser.refresh =
+function cb_refresh(item)
+{
+    // Make sure we have a directory:
+    item = item.parent;
+    item.directories = {};
+    item.files = {};
+    addSubs(chromeBrowser.chromeStructure, item);
+    chromeTree.currentURL = item.href;
+    chromeDirTree.changeDir(item.href);
+
+
+}
+
 ////////////////////////////////////////////////////////////////
 // Copy stuff.
 
@@ -366,7 +380,9 @@ function cb_replace(item)
     {
         logException(ex);
         alert(getStr("error.replacing.file", [formatException(ex)]));
+        return;
     }
+    this.refresh(item);
 }
 
 chromeBrowser._replaceFile =

@@ -114,6 +114,8 @@
           <menuitem id="cx-lxr" label="&cx.lxr;" accesskey="&cx.lxr.accesskey;"
                     oncommand="chromeBrowser.lxr(chromeTree.getCurrentItem());"/>
           <menuseparator/>
+          <menuitem id="cx-refresh" label="&cx.refresh;" accesskey="&cx.refresh.accesskey;"
+                    oncommand="chromeBrowser.refresh(chromeTree.getCurrentItem());"/>
           <menuitem id="cx-saveas" label="&cx.save-as;" accesskey="&cx.save-as.accesskey;"
                     oncommand="chromeBrowser.saveAs(chromeTree.getCurrentHref());"/>
           <menuitem id="cx-replace" label="&cx.replace;" accesskey="&cx.replace.accesskey;"
