@@ -138,16 +138,26 @@ function cb_processPossibleProblems()
     for (var i = 0; i < this.delayedProblems.length; i++)
     {
         var p = this.delayedProblems[i];
-        // Only content providers may get ignored
-        if (!((/content\/?$/).test(p.url)) || (stringTrim(p.flags) == ""))
+
+        // First, remove the actual thing. Note the odd workaround for delete's
+        // behaviour here...
+        var prov = this.chromeStructure.findURL(p.url);
+        delete prov.parent.directories[prov.leafName];
+
+        // Check if there are specific flags (platform or xpcnativewrappers):
+        var flagAry = stringTrim(p.flags).split(/\s+/g);
+        var contentSpecificFlags = flagAry.some(/platform|xpcnativewrappers/);
+
+        // If this is a non-content package, or has no content-specific flags,
+        // this is definitely a problem, so add it:
+        if ((prov.leafName != "content") || !contentSpecificFlags)
         {
             this.addProblem(p);
             continue;
         }
 
         // and only if there are other providers that did work out:
-        var pack = p.url.match(/^chrome:\/\/([^\/]+)/)[1];
-        var packDirs = this.chromeStructure.directories[pack].directories;
+        var packDirs = prov.parent.directories;
         if ("skin" in packDirs || "locale" in packDirs)
             continue;
         // Otherwise, this is a problem:

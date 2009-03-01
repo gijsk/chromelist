@@ -4,9 +4,12 @@
 // parse all the manifests and make a tree. On extension-loaded browsers,
 // on slow machines, it might well take *very* long. So I'm trying hard not
 // to hang the UI.
+
+var finalCallbackFunction;
 function refreshChromeList(chromeStructure, callback)
 {
     var chromeURLs = [];
+    finalCallbackFunction = callback;
 
     // Fetch the manifests.
     var manifs = getManifests();
@@ -36,7 +39,7 @@ function refreshChromeList(chromeStructure, callback)
         if (currentManifest < numberOfManifests)
             setTimeout(doParseManifest, 0);
         else
-            setTimeout(makeChromeTree, 0, chromeStructure, chromeURLs, updateOverrides, callback);
+            setTimeout(makeChromeTree, 0, chromeStructure, chromeURLs);
     };
 }
 
@@ -44,11 +47,9 @@ function refreshChromeList(chromeStructure, callback)
  * Construct the chrome tree
  * @param chromeStructure {ChromeStruct} the chrome structure on which to build.
  * @param chromeURLs {array} the list of chrome URLs we have
- * @param callback {function} a function to call when we're done
- * @param callbackParam {function} a parameter for the callback function (which is, in fact, another callback function)
  * @returns nothing!
  */
-function makeChromeTree(chromeStructure, chromeURLs, callback, callbackParam)
+function makeChromeTree(chromeStructure, chromeURLs)
 {
     var currentIndex = 0;
     var numberOfURLs = chromeURLs.length;
@@ -64,7 +65,7 @@ function makeChromeTree(chromeStructure, chromeURLs, callback, callbackParam)
             if (currentIndex < numberOfURLs)
                 setTimeout(doProcessChromeURL, 0);
             else
-                setTimeout(callback, 0, chromeStructure, callbackParam);
+                setTimeout(updateOverrides, 0, chromeStructure);
         };
 
         // Expand our stored items:
@@ -94,13 +95,9 @@ function getProviderDir(chromeStructure, packageName, providerType, manifest, fl
         chromeStructure.directories[packageName] = dir;
     }
 
-    if (!(providerType in chromeStructure.directories[packageName].directories))
-    {
-        dir = new ChromeDirectory(chromeStructure.directories[packageName],
-                                  providerType, manifest, flags);
-        chromeStructure.directories[packageName].directories[providerType] = dir;
-    }
-
+    dir = new ChromeDirectory(chromeStructure.directories[packageName],
+                              providerType, manifest, flags);
+    chromeStructure.directories[packageName].directories[providerType] = dir;
     return chromeStructure.directories[packageName].directories[providerType];
 }
 
@@ -190,9 +187,10 @@ function parseManifest(chromeStructure, manifest, path)
     return rv;
 }
 
-function updateOverrides(chromeStructure, callback)
+function updateOverrides(chromeStructure)
 {
     var overridden, override, manifest, overriddenURI, expectedURI, prob, desc;
+    var onceResolved;
     var chromeOverrides = chromeStructure.overrides;
     for (var i = 0; i < chromeOverrides.length; i++)
     {
@@ -201,10 +199,11 @@ function updateOverrides(chromeStructure, callback)
         manifest = chromeOverrides[i][2];
         overriddenURI = iosvc.newURI(overridden, null, null);
         try {
-            expectedURI = chromeReg.convertChromeURL(overriddenURI);
+            expectedURI = getRealURI(overriddenURI);
+            onceResolved = getMappedURI(overriddenURI);
         }
         catch (ex) { /* If this fails, the chrome URI being overridden does not exist: */}
-        if (!expectedURI || (expectedURI.spec != override))
+        if (!expectedURI || (onceResolved.spec != override))
         {
             desc = getStr("problem.override.notApplied", [overridden, override]);
             prob = {desc: desc, manifest: manifest, severity: "warning"};
@@ -212,12 +211,6 @@ function updateOverrides(chromeStructure, callback)
         }
         else // OK, this thing got applied. Do stuff:
         {
-            //xxxHack: unfortunately, if you do a chrome --> chrome override,
-            //         the chrome Registry just gives you back the same chrome URL.
-            //         We need to unwrap this so as to obtain a proper URI:
-            while (expectedURI.scheme == "chrome")
-                expectedURI = chromeReg.convertChromeURL(expectedURI);
-
             if (expectedURI.scheme == "file")
             {
                 overrideFile(chromeStructure, overridden, override, expectedURI, manifest);
@@ -235,7 +228,7 @@ function updateOverrides(chromeStructure, callback)
             }
         }
     }
-    setTimeout(callback, 0);
+    setTimeout(updateFlags, 0, chromeStructure);
 }
 
 function overrideFile(chromeStructure, overridden, override, expectedURI, manifest)
@@ -362,6 +355,30 @@ function addOverride(chromeStructure, overridden, override, manifest, scheme, si
 
 
 /**
+ * Updates all the skin/locale flags to include the flags enabled for the
+ * content package that won't get parsed on skin/locale flags.
+ * @param chromeStructure {ChromeStructure} the chrome structure to work on.
+ */
+function updateFlags(chromeStructure)
+{
+    for each (var pack in chromeStructure.directories)
+    {
+        var flags;
+        if ("content" in pack.directories && (flags = pack.directories.content.flags))
+        {
+            var flagAry = flags.split(/\s+/g);
+            var p = flags.match(/platform/);
+            var xnw = flags.match(/xpcnativewrappers=(?:yes|no)/);
+            var addedFlags = p ? p[0] : "";
+            addedFlags += " " + (xnw ? xnw[0] : "");
+            var otherProvs = [pack.directories[d] for (d in pack.directories) if (d != "content")];
+            otherProvs.forEach(function(x) x.flags += addedFlags);
+        }
+    }
+    setTimeout(finalCallbackFunction, 0);
+}
+
+/**
  * (re)parse this chrome structure part.
  * @param chromeStructure {ChromeStruct} the structure to stick this onto.
  * @param cDir {ChromeDirectory} the directory to further parse.
@@ -463,12 +480,12 @@ function jarChildrenGenerator(chromeStructure, cDir, realURL)
                                                        jarFileURL.spec]);
                 prob = {desc: desc, manifest: manifest, severity: "error"};
                 chromeBrowser.addProblem(prob);
+                delete cDir.parent.directories[cDir.leafName];
             }
             else
             {
                 logException(ex);
             }
-            delete cDir.parent.directories[cDir.leafName];
             return;
         }
         else
@@ -505,7 +522,6 @@ function fileChildrenGenerator(chromeStructure, cDir, realURL)
         prob = {desc: desc, manifest: cDir.manifest, severity: "error",
                 url: cDir.href, flags: cDir.flags};
         chromeBrowser.addPossibleProblem(prob);
-        delete cDir.parent.directories[cDir.leafName];
         return;
     }
     if (!f.isDirectory())

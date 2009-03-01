@@ -20,7 +20,7 @@ ChromeStructure.prototype.level = 0;
 ChromeStructure.prototype.findURL =
 function cs_findURL(url)
 {
-    var i, currentNode = this, urlparts;
+    var i, urlparts, currentNode = this;
     url = url.replace(/^chrome:\/\//, "");
     urlparts = url.split("/");
     for (i = 0; i < urlparts.length; i++)
@@ -74,28 +74,6 @@ function ChromeDirectory(someParent, name, manifest, flags)
 
     this.path = this.getPath();
     this.leafName = decodeURIComponent(name);
-}
-
-// DON'T PASS DIRECTORIES, _ONLY_ FILES
-ChromeDirectory.prototype.addRelativeURL =
-function CD_addRelativeURL(url, size)
-{
-    var name = url.split("/", 1)[0];
-    var remainingurl = url.replace(/^[^\/]+\/?/, "");
-    if (remainingurl == "")
-    {
-        // We want the relative url to be a file, hence the last part will be a
-        // file, not a directory.
-        if (!(name in this.files))
-            this.files[name] = new ChromeFile(this, name, size);
-    }
-    else
-    {
-        if (!(name in this.directories))
-            this.directories[name] = new ChromeDirectory(this, name, this.manifest);
-        this.directories[name].addRelativeURL(remainingurl, size);
-    }
-    return;
 }
 
 ChromeDirectory.prototype.getPath =
