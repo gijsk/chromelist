@@ -130,6 +130,10 @@ function getManifests()
         {
             continue;
         }
+        // Don't care for stuff that's not there:
+        if (!entry.exists())
+            continue;
+
         // If this is not a directory, it must be a manifest file.
         if (!entry.isDirectory())
         {
