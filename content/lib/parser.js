@@ -172,13 +172,15 @@ function parseManifest(chromeStructure, manifest, path)
             case "override":
                 if (params.length >= 3)
                 {
+                    // If this is a relative URL, need to resolve:
                     try {
                         var resolvedURI = iosvc.newURI(params[2], null, uriForManifest);
                     } catch(ex) {}
+                    flags = params.slice(3).join(" ");
                     if (resolvedURI)
-                        chromeStructure.overrides.push([params[1], resolvedURI.spec, path]);
+                        chromeStructure.overrides.push([params[1], resolvedURI.spec, path, flags]);
                     else
-                        chromeStructure.overrides.push([params[1], params[2], path]);
+                        chromeStructure.overrides.push([params[1], params[2], path, flags]);
                 }
 
             // Otherwise, don't do anything.
@@ -189,7 +191,8 @@ function parseManifest(chromeStructure, manifest, path)
 
 function updateOverrides(chromeStructure)
 {
-    var overridden, override, manifest, overriddenURI, expectedURI, prob, desc;
+    var overridden, override, manifest, flags, overriddenURI, expectedURI;
+    var prob, desc;
     var onceResolved;
     var chromeOverrides = chromeStructure.overrides;
     for (var i = 0; i < chromeOverrides.length; i++)
@@ -197,13 +200,14 @@ function updateOverrides(chromeStructure)
         overridden = chromeOverrides[i][0];
         override = chromeOverrides[i][1];
         manifest = chromeOverrides[i][2];
+        flags = chromeOverrides[i][3];
         overriddenURI = iosvc.newURI(overridden, null, null);
         try {
             expectedURI = getRealURI(overriddenURI);
             onceResolved = getMappedURI(overriddenURI);
         }
         catch (ex) { /* If this fails, the chrome URI being overridden does not exist: */}
-        if (!expectedURI || (onceResolved.spec != override))
+        if ((!expectedURI || (onceResolved.spec != override)) && flags == "")
         {
             desc = getStr("problem.override.notApplied", [overridden, override]);
             prob = {desc: desc, manifest: manifest, severity: "warning"};
