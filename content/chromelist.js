@@ -139,25 +139,43 @@ function cb_processPossibleProblems()
     {
         var p = this.delayedProblems[i];
 
-        // First, remove the actual thing. Note the odd workaround for delete's
-        // behaviour here...
+        // First, remove the actual thing, if it was ever added.
+        // Note the odd workaround for delete's behaviour here...
         var prov = this.chromeStructure.findURL(p.url);
-        delete prov.parent.directories[prov.leafName];
+        if (prov)
+        {
+            var provParent = prov.parent; // use this later.
+            delete provParent.directories[prov.leafName];
+            var isContent = prov.leafName == "content";
+        }
+        else
+        {
+            isContent = p.url.match(/chrome:\/\/[^\/]+\/content/i);
+            if (isContent)
+            {
+                var parentURL = p.url.replace(/content\/?$/, "");
+                provParent = this.chromeStructure.findURL(parentURL);
+            }
+        }
 
         // Check if there are specific flags (platform or xpcnativewrappers):
         var flagAry = stringTrim(p.flags).split(/\s+/g);
         var contentSpecificFlags = flagAry.some(/platform|xpcnativewrappers/);
 
-        // If this is a non-content package, or has no content-specific flags,
+        // If this is not a content package,
+        // or it is a content package with no content-specific flags,
         // this is definitely a problem, so add it:
-        if ((prov.leafName != "content") || !contentSpecificFlags)
+        if (!isContent || !contentSpecificFlags)
         {
             this.addProblem(p);
             continue;
         }
 
-        // and only if there are other providers that did work out:
-        var packDirs = prov.parent.directories;
+        // So if this is a content package, with content-specific flags,
+        // and if there are other providers that did work out,
+        // this is not a problem (eg. global-region registration in Fx 3)
+        // Hack for absence of provParent...
+        var packDirs = provParent ? provParent.directories : {};
         if ("skin" in packDirs || "locale" in packDirs)
             continue;
         // Otherwise, this is a problem:
