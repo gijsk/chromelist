@@ -5,7 +5,15 @@
 // on slow machines, it might well take *very* long. So I'm trying hard not
 // to hang the UI.
 
+// To be called once we're done:
 var finalCallbackFunction;
+
+// Progress bar division:
+const PARSEPROGRESS = 25;
+const MAXPROGRESS = 100;
+const TREEPROGRESS = MAXPROGRESS - PARSEPROGRESS;
+
+// Kickstart it all:
 function refreshChromeList(chromeStructure, callback)
 {
     var chromeURLs = [];
@@ -32,7 +40,7 @@ function refreshChromeList(chromeStructure, callback)
 
         // Update stuff every now and then.
         if (currentManifest % 10 == 0)
-            setStatusProgress(Math.floor(25 * currentManifest / numberOfManifests));
+            setStatusProgress(Math.floor(PARSEPROGRESS * currentManifest / numberOfManifests));
 
         // Increment and parse some more - or start constructing the tree
         currentManifest++;
@@ -61,7 +69,7 @@ function makeChromeTree(chromeStructure, chromeURLs)
         {
             currentIndex++;
             if (currentIndex % 10 == 0)
-                setStatusProgress(25 + (75 * currentIndex / numberOfURLs));
+                setStatusProgress(PARSEPROGRESS + (TREEPROGRESS * (currentIndex / numberOfURLs)));
             if (currentIndex < numberOfURLs)
                 setTimeout(doProcessChromeURL, 0);
             else
@@ -343,11 +351,11 @@ function addOverride(chromeStructure, overridden, override, manifest, scheme, si
         // It's hard to make a tree out of that.
         // We will try for a small bit, but not too long:
         var chromeThingyDir = overridden.replace(/[^\/]+$/, "");
-        var chromeThingyFile = overridden.substr(chromeThingyDir.length);
         chromeThingy = chromeStructure.findURL(chromeThingyDir);
         if (!chromeThingy)
             return; // Still nothing, give up.
 
+        var chromeThingyFile = overridden.substr(chromeThingyDir.length);
         chromeThingy = new ChromeFile(chromeThingy, chromeThingyFile, size);
     }
     chromeThingy.size = size;
