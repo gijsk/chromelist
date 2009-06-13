@@ -9,7 +9,7 @@
   <RDF:Description RDF:about="urn:mozilla:install-manifest"
                    em:id="chromelist@extensions.gijsk.com"
                    em:name="Chrome List"
-                   em:version="0.3.1"
+                   em:version="0.4"
                    em:description="Lets you take a peek at the files under the hood of your application and add-ons."
                    em:creator="Gijs Kruitbosch"
                    em:homepageURL="http://www.gijsk.com/">
@@ -19,7 +19,7 @@
         <Description>
             <em:id>{ec8030f7-c20a-464f-9b0e-13a3a9e97384}</em:id>
             <em:minVersion>3.0</em:minVersion>
-            <em:maxVersion>3.2a1pre</em:maxVersion>
+            <em:maxVersion>3.6a1pre</em:maxVersion>
         </Description>
     </em:targetApplication>
     <em:targetApplication>
