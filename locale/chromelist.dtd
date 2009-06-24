@@ -23,9 +23,9 @@
 <!ENTITY     cx.open.accesskey              "O">
 <!ENTITY     cx.open.tab                    "In a New Tab">
 <!ENTITY     cx.open.tab.accesskey          "T">
-<!ENTITY     cx.open.window                 "in a New Window">
+<!ENTITY     cx.open.window                 "In a New Window">
 <!ENTITY     cx.open.window.accesskey       "W">
-<!ENTITY     cx.open.current                "in Current Window/Tab">
+<!ENTITY     cx.open.current                "In Current Window/Tab">
 <!ENTITY     cx.open.current.accesskey      "C">
 <!ENTITY     cx.launch                      "Launch">
 <!ENTITY     cx.launch.accesskey            "L">
@@ -39,7 +39,7 @@
 <!ENTITY     cx.copy.chrome.accesskey       "C">
 <!ENTITY     cx.copy.jarurl                 "JAR URL">
 <!ENTITY     cx.copy.jarurl.accesskey       "J">
-<!ENTITY     cx.copy.jarpath                "JARFile Path">
+<!ENTITY     cx.copy.jarpath                "JAR File Path">
 <!ENTITY     cx.copy.jarpath.accesskey      "P">
 <!ENTITY     cx.copy.fileurl                "File URL">
 <!ENTITY     cx.copy.fileurl.accesskey      "F">
@@ -65,7 +65,7 @@
 <!ENTITY     props.chrome-url.label         "Chrome URL">
 <!ENTITY     props.resolved-url.label       "Resolved URL">
 <!ENTITY     props.resolved-file.label      "File Path">
-<!ENTITY     props.resolved-jarfile.label   "JARFile Path">
+<!ENTITY     props.resolved-jarfile.label   "JAR File Path">
 <!ENTITY     props.manifest.label           "Package Manifest">
 <!ENTITY     props.file-size.label          "File Size">
 <!ENTITY     props.flags.label          "Flags">
