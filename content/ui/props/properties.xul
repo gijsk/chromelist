@@ -15,6 +15,11 @@
         screenX="24" screenY="24">
 
   <script type="application/x-javascript" src="properties.js"></script>
+  <script type="application/x-javascript" src="../../lib/utils.js"></script>
+  <stringbundleset>
+    <stringbundle id="locale-strings" src="chrome://chromelist/locale/chromelist.properties"/>
+  </stringbundleset>
+
 
   <keyset id="dialogKeys"/>
 

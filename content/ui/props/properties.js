@@ -15,7 +15,7 @@ function onLoad()
     if (file.TYPE == "ChromeDirectory")
         document.getElementById("file-size").hidden = true;
     else
-        document.getElementById("file-size-text").value = file.size/1000 + " KB";
+        document.getElementById("file-size-text").value = getFormattedBytes(file.size);
     document.getElementById("manifest-text").value = file.getManifest();
 
     var flags;

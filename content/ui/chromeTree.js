@@ -223,7 +223,7 @@ function ct_getFormattedFileSize(row)
     if (bytesMode)
         return this.data[row].size + "  ";
     else
-        return (Math.floor(this.data[row].size / 1024) + 1) + " KB  ";
+        return (Number(this.data[row].size / 1024).toFixed(2)) + " KB  ";
 }
 
 function ct_getFileIcon(row)

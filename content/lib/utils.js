@@ -368,3 +368,29 @@ function logException (ex)
     // FIXME: logException doesn't do anything yet.
     dump(ex)
 }
+
+function getFormattedBytes(bytes)
+{
+    var strBytes = String(bytes);
+    var ary = [];
+    while (strBytes)
+    {
+        ary.unshift(strBytes.substr(-3));
+        strBytes = strBytes.slice(0, -3);
+    }
+    return ary.join(".") + " " + getStr("props.bytes") + " " + getShortBytes(bytes);
+}
+
+function getShortBytes(bytes)
+{
+    if (bytes < 1024)
+        return "";
+    var labels = ["KiB", "MiB", "GiB", "TiB"], i = -1;
+    while (bytes > 1024)
+    {
+        bytes /= 1024;
+        i++;
+    }
+    return "(" + bytes.toFixed(2) + " " + labels[i] + ")" ;
+}
+
