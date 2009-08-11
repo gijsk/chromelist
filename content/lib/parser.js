@@ -493,7 +493,7 @@ function jarChildrenGenerator(chromeStructure, cDir, realURL)
             else if (ex.result == Components.results.NS_ERROR_FILE_NOT_FOUND)
             {
                 desc = getStr("problem.noJarFile", [cDir.href, realURL.spec]);
-                prob = {desc: desc, manifest: manifest, severity: "error",
+                prob = {desc: desc, manifest: cDir.manifest, severity: "error",
                         url: cDir.href, flags: cDir.flags};
                 chromeBrowser.addProblem(prob);
                 delete cDir.parent.directories[cDir.leafName];
