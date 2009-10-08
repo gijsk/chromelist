@@ -379,6 +379,11 @@ function cb_saveAs(href)
 chromeBrowser.replace =
 function cb_replace(item)
 {
+    if (item.scheme == "data")
+    {
+        alert(getStr("replace.dataurl"));
+        return;
+    }
     var path = item.path;
     // Check if user really wants to do this:
     if (this.getPref("replace.prompt"))

@@ -266,26 +266,18 @@ function ct_popupShowing(event)
     }
 
     // Only show the file or jar items, depending on the kind of mapping.
-    if (selectedItem.scheme == "file")
-    {
-        document.getElementById("cx-copyjarurl").hidden = true;
-        document.getElementById("cx-copyjarpath").hidden = true;
-        document.getElementById("cx-copyfilepath").hidden = false;
-        document.getElementById("cx-copyfileurl").hidden = false;
-        // Can launch files:
-        document.getElementById("cx-launch").hidden = false;
-        document.getElementById("cx-launch-sep").hidden = false;
-    }
-    else if (selectedItem.scheme == "jar")
-    {
-        document.getElementById("cx-copyjarurl").hidden = false;
-        document.getElementById("cx-copyjarpath").hidden = false;
-        document.getElementById("cx-copyfilepath").hidden = true;
-        document.getElementById("cx-copyfileurl").hidden = true;
-         // Can't launch jar files (yet):
-        document.getElementById("cx-launch").hidden = true;
-        document.getElementById("cx-launch-sep").hidden = true; 
-    }
+    var isFile = (selectedItem.scheme == "file");
+    var isJAR = (selectedItem.scheme == "jar");
+    var isData = (selectedItem.scheme == "data"); 
+    document.getElementById("cx-copyjarurl").hidden = !isJAR;
+    document.getElementById("cx-copyjarpath").hidden = !isJAR;
+    document.getElementById("cx-copyfilepath").hidden = !isFile;
+    document.getElementById("cx-copyfileurl").hidden = !isFile;
+    document.getElementById("cx-copydataurl").hidden = !isData;
+    // Can't launch jar files (yet):
+    document.getElementById("cx-launch").hidden = !isFile;
+    document.getElementById("cx-launch-sep").hidden = !isFile; 
+    
     //document.getElementById("cx-copycontent").setAttribute("disabled", isDir);
     //document.getElementById("cx-copycontentdata").setAttribute("disabled", isDir);
     return true;

@@ -235,6 +235,10 @@ function updateOverrides(chromeStructure)
             {
                 overrideJar(chromeStructure, overridden, override, expectedURI, manifest);
             }
+            else if (expectedURI.scheme == "data")
+            {
+                overrideData(chromeStructure, overridden, override, expectedURI, manifest);
+            }
             else
             {
                 desc = getStr("problem.override.unrecognized.url",
@@ -345,6 +349,12 @@ function overrideJar(chromeStructure, overridden, override, expectedURI, manifes
     }
 }
 
+function overrideData(chromeStructure, overridden, override, expectedURI, manifest)
+{
+    var size = expectedURI.spec.replace(/^data:[^,]*,/, "").length;
+    addOverride(chromeStructure, overridden, override, manifest, "data", size);
+}
+
 function addOverride(chromeStructure, overridden, override, manifest, scheme, size)
 {
     // Alright. Get stuff.
@@ -361,6 +371,7 @@ function addOverride(chromeStructure, overridden, override, manifest, scheme, si
 
         var chromeThingyFile = overridden.substr(chromeThingyDir.length);
         chromeThingy = new ChromeFile(chromeThingy, chromeThingyFile, size);
+        chromeThingy.parent.files[chromeThingy.leafName] = chromeThingy;
     }
     chromeThingy.size = size;
     chromeThingy.manifest = manifest;

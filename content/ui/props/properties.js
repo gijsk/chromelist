@@ -7,10 +7,8 @@ function onLoad()
     document.getElementById("resolved-url-text").value = file.resolvedURI;
     document.getElementById("resolved-file-text").value = file.path; 
     document.getElementById("resolved-jarfile-text").value = file.path;
-    if (file.scheme == "jar")
-        document.getElementById("resolved-file").hidden = true;
-    else if (file.scheme == "file")
-        document.getElementById("resolved-jarfile").hidden = true;
+    document.getElementById("resolved-file").hidden = (file.scheme != "file");
+    document.getElementById("resolved-jarfile").hidden = (file.scheme != "jar");
 
     if (file.TYPE == "ChromeDirectory")
         document.getElementById("file-size").hidden = true;

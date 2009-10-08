@@ -102,6 +102,8 @@
                         oncommand="chromeBrowser.copy(chromeTree.getCurrentItem(), 'resolvedURI')"/>
               <menuitem id="cx-copyjarpath" label="&cx.copy.jarpath;" accesskey="&cx.copy.jarpath.accesskey;"
                         oncommand="chromeBrowser.copy(chromeTree.getCurrentItem(), 'path')"/>
+              <menuitem id="cx-copydataurl" label="&cx.copy.dataurl;" accesskey="&cx.copy.dataurl.accesskey;"
+                        oncommand="chromeBrowser.copy(chromeTree.getCurrentItem(), 'resolvedURI')"/>
               <menuitem id="cx-copyfileurl" label="&cx.copy.fileurl;" accesskey="&cx.copy.fileurl.accesskey;"
                         oncommand="chromeBrowser.copy(chromeTree.getCurrentItem(), 'resolvedURI')"/>
               <menuitem id="cx-copyfilepath" label="&cx.copy.filepath;" accesskey="&cx.copy.filepath.accesskey;"

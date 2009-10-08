@@ -41,6 +41,8 @@
 <!ENTITY     cx.copy.jarurl.accesskey       "J">
 <!ENTITY     cx.copy.jarpath                "JAR File Path">
 <!ENTITY     cx.copy.jarpath.accesskey      "P">
+<!ENTITY     cx.copy.dataurl                "Data URL">
+<!ENTITY     cx.copy.dataurl.accesskey      "D">
 <!ENTITY     cx.copy.fileurl                "File URL">
 <!ENTITY     cx.copy.fileurl.accesskey      "F">
 <!ENTITY     cx.copy.filepath               "File Path">
