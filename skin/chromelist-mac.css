@@ -1,0 +1,20 @@
+#close-button {
+  list-style-image: url("chrome://global/skin/icons/closetab.png");
+  -moz-appearance: none;
+  border: none !important;
+  padding: 0;
+  padding-left: 3px;
+  padding-right: 3px;
+  margin: 1px 0 0;
+  background: none;
+  cursor: default;
+}
+
+#close-button:hover {
+  list-style-image: url("chrome://global/skin/icons/closetab-hover.png");
+}
+
+#close-button:hover:active {
+  list-style-image: url("chrome://global/skin/icons/closetab-active.png");
+}
+

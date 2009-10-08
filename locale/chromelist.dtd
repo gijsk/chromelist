@@ -5,7 +5,7 @@
 <!-- button stuff -->
 <!ENTITY     btn.close                      "Close">
 <!ENTITY     btn.close.accesskey            "C">
-<!ENTITY     btn.problems                   "View Problems...">
+<!ENTITY     btn.noproblems                 "No problems found!">
 <!ENTITY     btn.problems.accesskey         "P">
 
 <!-- shortcut stuff -->

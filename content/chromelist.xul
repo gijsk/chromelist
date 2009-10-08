@@ -62,7 +62,7 @@
             <toolbarbutton id="close-button" label="&btn.close;"
                            accesskey="&btn.close.accesskey;" disabled="false"
                            command="chromelist-close-command"/>
-            <toolbarbutton id="problem-button" label="&btn.problems;"
+            <toolbarbutton id="problem-button" label="&btn.noproblems;"
                            accesskey="&btn.problems.accesskey;" disabled="true"
                            command="chromelist-problem-command"/>
         </hbox>

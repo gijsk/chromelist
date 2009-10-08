@@ -56,7 +56,7 @@ function cb_init()
     {
         var s = document.createElementNS(XHTML_NS, "html:script");
         s.setAttribute("src", "chrome://browser/content/utilityOverlay.js");
-        s.setAttribute("type", "application/x-javascript");
+        s.setAttribute("type", "application/x-javascript;version=1.8");
         var ls = document.getElementById("last-script");
         var p = ls.parentNode;
         p.insertBefore(s, ls);
@@ -182,7 +182,11 @@ function cb_processPossibleProblems()
         this.addProblem(p);
     }
     if (this.foundProblems)
-        document.getElementById("problem-button").setAttribute("disabled", false);
+    {
+        var problemBtn = document.getElementById("problem-button");
+        problemBtn.setAttribute("disabled", false);
+        problemBtn.setAttribute("label", getStr("btn.problems"));
+    }
 }
 
 chromeBrowser.getPref =
