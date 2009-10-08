@@ -1,0 +1,12 @@
+#close-button {
+  list-style-image: url(moz-icon://stock/gtk-close?size=menu);
+  -moz-appearance: none;
+  border: none !important;
+  padding: 0;
+  padding-left: 3px;
+  padding-right: 3px;
+  margin: 1px 0 0;
+  background: none;
+  cursor: default;
+}
+
