@@ -334,11 +334,11 @@ function glimpseEscape(str)
 
 function getStr(id, args)
 {
-    if (args)
+    if (typeof args != "undefined")
     {
         if ((args instanceof Array) && args.length > 0)
             return document.getElementById("locale-strings").getFormattedString(id, args);
-        if (args instanceof String)
+        if (args !== null && args.constructor == String)
             return document.getElementById("locale-strings").getFormattedString(id, [args]);
     }
     return document.getElementById("locale-strings").getString(id);

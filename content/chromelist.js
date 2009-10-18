@@ -337,14 +337,35 @@ chromeBrowser.refresh =
 function cb_refresh(item)
 {
     // Make sure we have a directory:
+    if (item.level == 1)
+        alert("This shouldn't have happened, huh?!");
     item = item.parent;
+    // If item is too low, run on all children:
+    if (item.level == 1)
+    {
+        for (var k in item.directories)
+            this._refresh(item.directories[k]);
+    }
+    else
+    {
+        this._refresh(item);
+    }
+}
+
+/**
+ * This one does the actual refresh on this particular item...
+ */
+chromeBrowser._refresh =
+function cb__refresh(item)
+{
     item.directories = {};
     item.files = {};
-    addSubs(chromeBrowser.chromeStructure, item);
-    chromeTree.currentURL = item.href;
-    chromeDirTree.changeDir(item.href);
-
-
+    var href = item.href;
+    var overrides = filterOverrides(this.chromeStructure, href);
+    addSubs(this.chromeStructure, item);
+    updateOverrides(this.chromeStructure, overrides, true);
+    chromeTree.currentURL = href;
+    chromeDirTree.changeDir(href);
 }
 
 ////////////////////////////////////////////////////////////////

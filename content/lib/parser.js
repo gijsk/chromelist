@@ -73,7 +73,7 @@ function makeChromeTree(chromeStructure, chromeURLs)
             if (currentIndex < numberOfURLs)
                 setTimeout(doProcessChromeURL, 0);
             else
-                setTimeout(updateOverrides, 0, chromeStructure);
+                setTimeout(updateOverrides, 0, chromeStructure, null, null);
         };
 
         // Expand our stored items:
@@ -134,9 +134,17 @@ function getManifests()
         if (!entry.exists())
             continue;
 
+        // Because of bug 521262, as well as other add-on silliness, we may
+        // get entries twice. Both for directories and for files, we remove
+        // the earlier entry, as the last entry
+        // will stick, in case the browser actually re-parsed stuff:
+
         // If this is not a directory, it must be a manifest file.
         if (!entry.isDirectory())
         {
+            var iToDelete;
+            if ((iToDelete = manifests.indexOf(entry.path)) >= 0)
+                manifests.splice(iToDelete, 1);
             manifests.push(entry.path);
             continue;
         }
@@ -146,7 +154,11 @@ function getManifests()
         {
             var file = dirEntries.getNext().QueryInterface(nsIF);
             if ((/\.manifest$/i).test(file.path))
+            {
+                if ((iToDelete = manifests.indexOf(file.path)) >= 0)
+                    manifests.splice(iToDelete, 1);
                 manifests.push(file.path);
+            }
         }
     }
     return manifests;
@@ -201,12 +213,15 @@ function parseManifest(chromeStructure, manifest, path)
     return rv;
 }
 
-function updateOverrides(chromeStructure)
+function updateOverrides(chromeStructure, overrides, onlyOverrides)
 {
     var overridden, override, manifest, flags, overriddenURI, expectedURI;
     var prob, desc;
     var onceResolved;
-    var chromeOverrides = chromeStructure.overrides;
+    var chromeOverrides = overrides;
+    if (!chromeOverrides)
+        chromeOverrides = chromeStructure.overrides;
+
     for (var i = 0; i < chromeOverrides.length; i++)
     {
         overridden = chromeOverrides[i][0];
@@ -248,7 +263,8 @@ function updateOverrides(chromeStructure)
             }
         }
     }
-    setTimeout(updateFlags, 0, chromeStructure);
+    if (!onlyOverrides)
+        setTimeout(updateFlags, 0, chromeStructure);
 }
 
 function overrideFile(chromeStructure, overridden, override, expectedURI, manifest)
@@ -445,8 +461,8 @@ function chromeChildrenGenerator(chromeStructure, cDir)
     }
     catch (ex)
     {
-        var desc = getStr("problem.convertChromeURL.failure",[ptype, pname]);
-        var prob = {desc: desc, manifest: manifest, severity: "error"};
+        var desc = getStr("problem.convertChromeURL.failure", cDir.href);
+        var prob = {desc: desc, manifest: cDir.manifest, severity: "error"};
         chromeBrowser.addProblem(prob);
         return;
     }
@@ -629,4 +645,10 @@ function getChromeJARFile(containingDir, zr, parentURL, childName)
     }
     catch (ex) { size = 0; }
     return new ChromeFile(containingDir, leafName, size);
+}
+
+function filterOverrides(chromeStructure, filterURL)
+{
+    // Gives back a list of overrides:
+    return chromeStructure.overrides.filter(function cof(item) { return item[0].indexOf(filterURL) == 0; });
 }
