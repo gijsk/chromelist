@@ -22,6 +22,9 @@
 
 
   <keyset id="dialogKeys"/>
+  <keyset id="accelWShouldWork">
+    <key id="accelWNowWorks" modifiers="accel" key="&close.shortcut;" oncommand="window.close();"/>
+  </keyset>
 
   <label value="&props.header.label;"/>
   <separator class="groove"/>
@@ -66,6 +69,11 @@
         <separator orient="vertical"/>
         <label value="&props.flags.label; "/>
         <textbox readonly="true" id="flags-text"/>
+      </row>
+      <row id="addon">
+        <separator orient="vertical"/>
+        <label value="&props.addon.label; "/>
+        <textbox readonly="true" id="addon-text"/>
       </row>
     </rows>
   </grid>

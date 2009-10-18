@@ -45,6 +45,7 @@ function ChromeDirectory(someParent, name, manifest, flags)
     this.parent = someParent;
     this.href = this.parent.href + name + "/";
     this.level = this.parent.level + 1;
+    // If this is somewhere down, resolve stuff:
     if (this.level >= 2)
     {
         var resolvedURI = chromeReg.convertChromeURL(iosvc.newURI(this.href, null, null));
@@ -53,18 +54,22 @@ function ChromeDirectory(someParent, name, manifest, flags)
         if (this.level == 2) // we're looking at the magic file for our resolved URI, fix:
             this.resolvedURI = this.resolvedURI.replace(/[^\/]+$/, "");
     }
+    // Otherwise, we don't know:
     else
     {
         this.scheme = "unknown";
         this.resolvedURI = "";
     }
+    // We'll have directories and files underneath this (or might, anyway):
     this.directories = new Object();
     this.files = new Object();
+    // And we need to store the manifest used to register this:
     if (manifest)
         this.manifest = manifest;
     else
         this.manifest = this.parent.manifest;
 
+    // And the flags:
     if (flags)
         this.flags = flags;
     else if (this.level > 2)
@@ -72,6 +77,7 @@ function ChromeDirectory(someParent, name, manifest, flags)
     else
         this.flags = "";
 
+    // We calculate the path, and the leaf name:
     this.path = this.getPath();
     this.leafName = decodeURIComponent(name);
 }
@@ -91,6 +97,35 @@ function cd_getManifest()
 {
     return this.manifest;
 }
+
+ChromeDirectory.prototype._addon = "";
+ChromeDirectory.prototype.getAddOn =
+function cd_getAddOn()
+{
+    if (this._addon)
+        return this._addon;
+
+    var manifestURL = getURLSpecFromFile(this.getManifest());
+    var id;
+    [, id] = manifestURL.match(/\/([^\/]+)\/chrome.manifest$/);
+    if (!id)
+    {
+        this._addon = getStr("not.an.addon");
+    }
+    else
+    {
+        try {
+            this._addon = extManager.getItemForID(decodeURIComponent(id)).name;
+        }
+        catch (ex)
+        {
+            logException(ex);
+            this._addon = getStr("addon.not.found");
+        }
+    }
+    return this._addon;
+}
+
 ChromeDirectory.prototype.TYPE = "ChromeDirectory";
 ChromeDirectory.prototype.parent = null;
 ChromeDirectory.prototype.isDirectory = true;
@@ -133,4 +168,6 @@ function cf_getManifest()
 
 // Same as for directories
 ChromeFile.prototype.getPath = ChromeDirectory.prototype.getPath;
+ChromeFile.prototype._addon = "";
+ChromeFile.prototype.getAddOn = ChromeDirectory.prototype.getAddOn;
 ///////////////////

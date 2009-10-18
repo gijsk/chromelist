@@ -1,7 +1,7 @@
 // Chrome stuff
 var chromeStructure, chromeOverrides;
 // Services
-var iosvc, chromeReg, consoleService;
+var iosvc, chromeReg, consoleService, extManager;
 // UI stuff
 var chrometree, chromedirtree;
 
@@ -28,4 +28,7 @@ function initGlobalVars()
 
     consoleService = getService("@mozilla.org/consoleservice;1",
                                 "nsIConsoleService");
+    
+    extManager = getService("@mozilla.org/extensions/manager;1",
+                            "nsIExtensionManager");
 }

@@ -70,4 +70,6 @@
 <!ENTITY     props.resolved-jarfile.label   "JAR File Path">
 <!ENTITY     props.manifest.label           "Package Manifest">
 <!ENTITY     props.file-size.label          "File Size">
-<!ENTITY     props.flags.label          "Flags">
+<!ENTITY     props.flags.label              "Flags">
+<!ENTITY     props.addon.label              "Add-on Name">
+
