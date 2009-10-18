@@ -181,6 +181,12 @@ function cb_processPossibleProblems()
         // Otherwise, this is a problem:
         this.addProblem(p);
     }
+    this._enableProblemBtn();
+}
+
+chromeBrowser._enableProblemBtn =
+function cb_enableProblemBtn()
+{
     if (this.foundProblems)
     {
         var problemBtn = document.getElementById("problem-button");
@@ -350,6 +356,7 @@ function cb_refresh(item)
     {
         this._refresh(item);
     }
+    this._enableProblemBtn();
 }
 
 /**
