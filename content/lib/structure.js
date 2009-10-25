@@ -107,13 +107,14 @@ function cd_getAddOn()
 
     var manifestURL = getURLSpecFromFile(this.getManifest());
     var id;
-    [, id] = manifestURL.match(/\/([^\/]+)\/chrome.manifest$/);
-    if (!id)
+    var m = manifestURL.match(/\/([^\/]+)\/chrome.manifest$/);
+    if (!m)
     {
         this._addon = getStr("not.an.addon");
     }
     else
     {
+        id = m[1];
         try {
             this._addon = extManager.getItemForID(decodeURIComponent(id)).name;
         }

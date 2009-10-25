@@ -92,6 +92,9 @@
               <menuseparator/>
               <menuitem id="cx-view-source" label="&cx.view-source;" accesskey="&cx.view-source.accesskey;"
                         oncommand="chromeBrowser.viewSourceOf(chromeTree.getCurrentHref());"/>
+              <menuseparator id="cx-show-sep"/>
+              <menuitem id="cx-show-manifest" label="&cx.show-manifest;" accesskey="&cx.show-manifest.accesskey;"
+                        oncommand="chromeBrowser.showManifest(chromeTree.getCurrentItem());"/>
             </menupopup>
           </menu>
           <menu id="cx-copy" label="&cx.copy;">

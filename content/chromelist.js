@@ -339,6 +339,14 @@ function cb_launch(item)
     file.launch();
 }
 
+chromeBrowser.showManifest =
+function cb_showManifest(item)
+{
+   var file = newObject("@mozilla.org/file/local;1", "nsILocalFile");
+   file.initWithPath(item.getManifest());
+   file.reveal(); 
+}
+
 chromeBrowser.refresh =
 function cb_refresh(item)
 {
