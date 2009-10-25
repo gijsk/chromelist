@@ -232,7 +232,6 @@ function ct_getFileIcon(row)
         return "";
     // Thanks to Alex Sirota!
     var url = "moz-icon://" + this.data[row].leafName + "?size=16";
-    dump(url);
     return url;
 }
 

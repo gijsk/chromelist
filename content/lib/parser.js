@@ -114,11 +114,19 @@ function getManifests()
     const DS_CTR = "@mozilla.org/file/directory_service;1";
     const nsIProperties = Components.interfaces.nsIProperties;
     const nsISE = Components.interfaces.nsISimpleEnumerator;
-    const nsIF = Components.interfaces.nsIFile;
 
     var dirSvc = Components.classes[DS_CTR].getService(nsIProperties);
     var manifestEnum = dirSvc.get("ChromeML", nsISE);
     var manifests = [];
+    getManifestList(manifestEnum, manifests);
+    manifestEnum = dirSvc.get("SkinML", nsISE);
+    getManifestList(manifestEnum, manifests);
+    return manifests;
+}
+
+function getManifestList(manifestEnum, manifests)
+{
+    const nsIF = Components.interfaces.nsIFile;
     while (manifestEnum.hasMoreElements())
     {
         var entry = manifestEnum.getNext();
@@ -161,7 +169,6 @@ function getManifests()
             }
         }
     }
-    return manifests;
 }
 
 // Parse a manifest.
