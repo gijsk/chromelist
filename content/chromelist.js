@@ -3,7 +3,8 @@
 // Starts the whole thing
 function onLoad()
 {
-    initGlobalVars();
+    chrometree = document.getElementById("chrometree");
+    chromedirtree = document.getElementById("chromedirtree");
     chrometree.view = chromeTree;
     chromedirtree.view = chromeDirTree;
 
@@ -25,11 +26,15 @@ function onLoadDone()
     chromeDirTree.changeDir("chrome://");
 
     chromeBrowser.processPossibleProblems();
+    var sf = document.getElementById("searchFilter");
+    sf.addEventListener("command", chromeBrowser.updateSearch, true);
 }
 
 // Close up shop:
 function onUnload()
 {
+    var sf = document.getElementById("searchFilter");
+    sf.removeEventListener("command", chromeBrowser.updateSearch, true);
     chrometree.view = null;
     chromedirtree.view = null;
 }
@@ -502,6 +507,32 @@ function cb_lxr(item)
         this.view(href);
     }
 }
+
+// Search stuff.
+chromeBrowser.updateSearch =
+function cb_updateSearch(e)
+{
+    var searchTerm = document.getElementById("searchFilter").value;
+    chromeBrowser.search.expr = searchTerm;
+}
+
+chromeBrowser.search = new Object();
+chromeBrowser.search._update =
+function ct_s_up(newExpr)
+{
+    this._expr = newExpr.trim();
+    var treeBox = document.getElementById("chrometreebox");
+    if (!this._expr)
+        treeBox.removeAttribute("filtered");
+    else
+        treeBox.setAttribute("filtered", "true");
+    chromeTree.sort();
+    chromeTree.treebox.clearStyleAndImageCaches();
+    chromeDirTree.sort();
+}
+chromeBrowser.search.__defineGetter__("expr", function _getSearch() { return this._expr;});
+chromeBrowser.search.__defineSetter__("expr", chromeBrowser.search._update);
+
 
 // Properties stuff.
 chromeBrowser.showProperties =

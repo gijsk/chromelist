@@ -20,3 +20,17 @@
 {
   margin-right: 2px;
 }
+
+
+#chrometreebox[filtered=true] #chromefiletreechildren::-moz-tree-cell-text(unfiltered) {
+  color: grey !important;
+  font-style: italic !important;
+}
+
+#chrometreebox[filtered=true] #chromefiletreechildren::-moz-tree-row(unfiltered) {
+  display: none !important;
+}
+
+#chrometreebox[filtered=true] #chromefiletreechildren::-moz-tree-row(filtered) {
+  background-color: yellow;
+}

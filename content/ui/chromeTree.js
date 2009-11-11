@@ -38,6 +38,13 @@
 
 var bytesMode = false;
 
+const atoms = {
+    folder: atomsvc.getAtom("isFolder"),
+    unfiltered: atomsvc.getAtom("unfiltered"),
+    filtered: atomsvc.getAtom("filtered")
+}
+
+
 var chromeTree = {
     data:                 new Array(),
     displayData:          new Array(),
@@ -52,7 +59,7 @@ var chromeTree = {
     getParentIndex:       function(row)               { return -1; },
     getColumnProperties:  function(colid, col, props) {},
     getLevel:             function(row)               { return 0; },
-    getRowProperties:     function(row, props)        {},
+    getRowProperties:     ct_getRowProperties,
     isContainer:          function(row)               { return false; },
     isSeparator:          function(row)               { return false; },
     isSorted:             function(row)               { return false; },
@@ -72,7 +79,8 @@ var chromeTree = {
     paste:                function() {},
     canDrop:              function (aIndex, aOrientation) { return false; },
     drop:                 function (aIndex, aOrientation) { },
-    _url:                 ""
+    _url:                 "",
+    matchesSearch:        ct_matchesSearch
 }
 
 chromeTree.__defineSetter__("currentURL", setChromeTreeURL);
@@ -112,11 +120,18 @@ function ct_getCellProperties(row, col, props)
 {
     if (row == -1)
         return;
-    if (col.id == "chromefilename" && this.data[row].isDirectory)
-    {
-        var atomsvc = getService("@mozilla.org/atom-service;1", "nsIAtomService");
-        props.AppendElement(atomsvc.getAtom("isFolder"));
-    }
+    if (col.id == "chromefilename" && this.displayData[row].isDirectory)
+        props.AppendElement(atoms.folder);
+    if (!this.displayData[row].filtered)
+        props.AppendElement(atoms.unfiltered)
+}
+
+function ct_getRowProperties(row, props)
+{
+    if (this.displayData[row].filtered)
+        props.AppendElement(atoms.filtered);
+    else
+        props.AppendElement(atoms.unfiltered);
 }
 
 // Get the extension on a (f)ile path.
@@ -174,19 +189,28 @@ function ct_sort()
     }
 
     delete this.displayData;
-    this.displayData = new Array;
+    this.displayData = new Array();
+    var expr = chromeBrowser.search.expr;
+    const hideFiltered = false;
     for (var row = 0; row < this.data.length; ++row)
     {
-        var fName = this.data[row].leafName;
-        var fSize = this.getFormattedFileSize(row);
-        var fExt = this.getExtension(this.data[row].leafName);
-        var fIcon = this.getFileIcon(row);
-        var formattedData = { leafName : fName, size: fSize, extension: fExt, icon: fIcon };
-        this.displayData.push(formattedData);
+        var fFiltered = this.matchesSearch(this.data[row], expr)
+        if (fFiltered || !hideFiltered)
+        {
+            var fName = this.data[row].leafName;
+            var fSize = this.getFormattedFileSize(row);
+            var fExt = this.getExtension(this.data[row].leafName);
+            var fIcon = this.getFileIcon(row);
+            var fIsDir = this.data[row].isDirectory;
+            var formattedData = {leafName: fName, size: fSize, icon: fIcon,
+                                 extension: fExt, filtered: fFiltered,
+                                 isDirectory: fIsDir, orig: this.data[row]};
+            this.displayData.push(formattedData);
+        }
     }
 
     this.treebox.rowCountChanged(0, -this.rowCount);
-    this.rowCount = this.data.length;
+    this.rowCount = this.displayData.length;
     this.treebox.rowCountChanged(0, this.rowCount);
 }
 
@@ -210,7 +234,7 @@ function ct_updateView(column, direction)
     this.sort();
 
     chromeDirTree.reselectCurrentDirectory();  // select directory in chromeDirTree
-    if (this.data.length)
+    if (this.displayData.length)
         this.selection.select(0); // Select the first item.
 }
 
@@ -244,7 +268,7 @@ function ct_popupShowing(event)
     if (this.selection.count != 1)
         return false; // cancel, we can't do anything? :S
 
-    var selectedItem = this.data[this.selection.currentIndex];
+    var selectedItem = this.displayData[this.selection.currentIndex].orig;
 
     // Can't open or save a dir, nor copy contents:
     var isDir = selectedItem.isDirectory;
@@ -290,7 +314,7 @@ function ct_getCurrentHref()
 {
     if (this.selection.count != 1)
         return "";
-    var selectedItem = this.data[this.selection.currentIndex];
+    var selectedItem = this.displayData[this.selection.currentIndex].orig;
     return selectedItem.href;
 }
 
@@ -298,7 +322,7 @@ function ct_getCurrentAbsoluteHref()
 {
     if (this.selection.count != 1)
         return "";
-    var selectedItem = this.data[this.selection.currentIndex];
+    var selectedItem = this.displayData[this.selection.currentIndex].orig;
     return selectedItem.resolvedURI;
 }
 
@@ -306,7 +330,7 @@ function ct_getCurrentItem()
 {
     if (this.selection.count != 1)
         return null;
-    return this.data[this.selection.currentIndex];
+    return this.displayData[this.selection.currentIndex].orig;
 }
 
 function compareName(a, b) {
@@ -355,25 +379,25 @@ function ct_dblClick(event)
     if (this.selection.currentIndex < 0 || this.selection.currentIndex >= this.rowCount)
         this.selection.currentIndex = this.rowCount - 1;
 
-    var i = this.selection.currentIndex;
-    if (this.data[i].isDirectory) // Open directories
+    var f = this.displayData[this.selection.currentIndex].orig;
+    if (f.isDirectory) // Open directories
     {
-        chromeDirTree.changeDir(this.data[i].href, true);
+        chromeDirTree.changeDir(f.href, true);
     }
     else // View file sources.
     {
         // View the source of rdf, dtd, xul or js files by default.
-        if ((/xul|js|rdf|dtd/).test(this.getExtension(this.data[i].leafName)))
+        if ((/xul|js|rdf|dtd/).test(this.getExtension(f.leafName)))
         {
-            chromeBrowser.viewSourceOf(this.data[i].href);
+            chromeBrowser.viewSourceOf(f.href);
         }
         else if (chromeBrowser.host == "Firefox")
         {
-            chromeBrowser.view(this.data[i].href);
+            chromeBrowser.view(f.href);
         }
         else
         {
-            chromeBrowser.view(this.data[i].resolvedURI);
+            chromeBrowser.view(f.resolvedURI);
         }
     }
 }
@@ -386,4 +410,35 @@ function ct_keypress(event)
         // Hack-er-tee-hack:
         this.dblClick(e);
     }
+}
+
+function ct_matchesSearch(obj, expr)
+{
+    if (!obj || !expr)
+        return true;
+
+    if (obj.leafName.indexOf(expr) > -1 ||
+        obj.href.indexOf(expr) > CH_SCHEME) // ignore "chrome://"
+    {
+        return true;
+    }
+    if (obj.isDirectory)
+    {
+        for (var k in obj.files)
+        {
+            if (k.indexOf(expr) > -1 || obj.files[k].href.indexOf(expr) > CH_SCHEME)
+                return true;
+        }
+        for (var k in obj.directories)
+        {
+            if (k.indexOf(expr) > -1)
+                return true;
+            var dir = obj.directories[k];
+            if (dir.href.indexOf(expr) > CH_SCHEME)
+                return true;
+            if (this.matchesSearch(dir, expr))
+                return true;
+        }
+    }
+    return false;
 }

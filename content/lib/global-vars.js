@@ -1,7 +1,7 @@
 // Chrome stuff
 var chromeStructure, chromeOverrides;
 // Services
-var iosvc, chromeReg, consoleService, extManager;
+var iosvc, atomsvc, chromeReg, consoleService, extManager;
 // UI stuff
 var chrometree, chromedirtree;
 
@@ -17,11 +17,12 @@ const nsIFileURL = Components.interfaces.nsIFileURL;
 const nsIZipReader = Components.interfaces.nsIZipReader;
 const nsIZipEntry = Components.interfaces.nsIZipEntry;
 
+// Global constants etc:
+const CH_SCHEME = "chrome:".length;
+
 // Initialize all of this...
 function initGlobalVars()
 {
-    chrometree = document.getElementById("chrometree");
-    chromedirtree = document.getElementById("chromedirtree");
     iosvc = getService("@mozilla.org/network/io-service;1", "nsIIOService");
     chromeReg = getService("@mozilla.org/chrome/chrome-registry;1",
                            "nsIToolkitChromeRegistry");
@@ -31,4 +32,7 @@ function initGlobalVars()
     
     extManager = getService("@mozilla.org/extensions/manager;1",
                             "nsIExtensionManager");
+    atomsvc = getService("@mozilla.org/atom-service;1", "nsIAtomService");
 }
+
+initGlobalVars();

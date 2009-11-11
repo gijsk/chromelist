@@ -37,7 +37,8 @@
  */
 
 var chromeDirTree = {
-    data:                   new Array,
+    data:                   new Array(),
+    generateData:           cdt_generateData,
     getCellText:            cdt_getCellText,
     getLevel:               cdt_getLevel,
     getParentIndex:         cdt_getParentIndex,
@@ -60,7 +61,9 @@ var chromeDirTree = {
     indexOfURL:             cdt_indexOfURL,
     canDrop:                function (aIndex, aOrientation) { return false; },
     keypress:               cdt_keypress,
-    click:                  cdt_click
+    click:                  cdt_click,
+    // Steal from chromeTree:
+    matchesSearch:          ct_matchesSearch
 }
 
 
@@ -136,47 +139,15 @@ function cdt_toggleOpenState(row)
     }
     else // Okay, this node was closed, we open it, we need to add the children.
     {
-        // Do we have stored data on the children from before? Pretty please? :-D
-        if (this.data[row].children)
-        {
-            for (var x = this.data[row].children.length - 1; x >= 0; --x)
-                this.data.splice(row + 1, 0, this.data[row].children[x]);
+        for (var x = this.data[row].children.length - 1; x >= 0; --x)
+            this.data.splice(row + 1, 0, this.data[row].children[x]);
 
-            // Clean up
-            this.updateParentIndices();
-            this.rowCount = this.data.length;
-            this.treebox.rowCountChanged(row + 1, this.data[row].children.length);
-            this.data[row].children = null;
-            this.data[row].open = true;
-            this.treebox.invalidateRow(row);
-        }
-        else // Awwwww. :-(. Well, let's do it the hard way then.
-        {
-            var dirNode = chromeBrowser.chromeStructure.findURL(this.data[row].href);
-            var subDirs = [];
-            for (var k in dirNode.directories)
-            {
-                subDirs.push( {leafName: k, parent: dirNode.href, href: dirNode.directories[k].href,
-                               level: dirNode.directories[k].level,
-                               open: false, empty: false, children: null, hasNext: true, parentIndex: -1 });
-            }
-            if (subDirs.length == 0)
-            {
-                this.data[row].empty = true;
-                this.data[row].open = false;
-                this.treebox.invalidateRow(row);
-                return;
-            }
-            subDirs.sort(dirSort);
-            subDirs[subDirs.length - 1].hasNext = false; // Last element doesn't have a next item.
-
-            for (var x = subDirs.length - 1; x >= 0; --x)
-                this.data.splice(row + 1, 0, subDirs[x]);
-            this.rowCount = this.data.length;
-            this.treebox.rowCountChanged(row + 1, subDirs.length);
-            this.data[row].open = true;
-            this.treebox.invalidateRow(row);
-        }
+        // Clean up
+        this.updateParentIndices();
+        this.rowCount = this.data.length;
+        this.treebox.rowCountChanged(row + 1, this.data[row].children.length);
+        this.data[row].open = true;
+        this.treebox.invalidateRow(row);
     }
 }
 
@@ -216,17 +187,10 @@ function cdt_changeDir(href, forceOpen)
     chromeTree.currentURL = href;
     if (this.data.length == 0) // We need to create the full data array first.
     {
-        var elemsAdded = 0;
-        for (var dir in chromeBrowser.chromeStructure.directories)
-        {
-            var dirObj = chromeBrowser.chromeStructure.directories[dir];
-            this.data.push( {leafName: dir, parent: "", href: dirObj.href, open: false, level: dirObj.level,
-                             empty: false, children: null, hasNext:false, parentIndex: -1} );
-            elemsAdded++;
-        }
+        this.data = this.generateData(chromeBrowser.chromeStructure);
         this.data.sort(dirSort);
-        this.rowCount = elemsAdded;
-        this.treebox.rowCountChanged(0, elemsAdded);
+        this.rowCount = this.data.length;
+        this.treebox.rowCountChanged(0, this.data.length);
         this.selection.select(0);
     }
 
@@ -283,6 +247,39 @@ function cdt_indexOfURL(href)
             left = mid + 1;
     }
     return -1;
+}
+
+function cdt_generateData(obj)
+{
+    var data = [];
+    if (!obj || !obj.directories)
+        return data;
+    var directories = obj.directories;
+    var parentHRef = obj.href;
+    if (parentHRef == "chrome://")
+        parentHRef = "";
+    for (var dir in directories)
+    {
+        var dirObj = directories[dir];
+        var childData = this.generateData(dirObj);
+        if (childData.length > 0)
+            childData[childData.length - 1].hasNext = false;
+        var dataObj = {leafName: dirObj.leafName, parent: parentHRef,
+                       href: dirObj.href, open: false, level: dirObj.level,
+                       empty: (childData.length == 0), children: childData,
+                       hasNext: (parentHRef), parentIndex: -1};
+        data.push(dataObj);
+    }
+    return data.sort(dirSort);
+}
+
+function cdt_filter(expr)
+{
+    for (var i = 0; i < this.data.length; i++)
+    {
+        var obj = this.data[i];
+        
+    }
 }
 
 function dirSort(a, b)
