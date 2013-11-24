@@ -50,7 +50,7 @@ futils.umask = PERM_IWOTH | PERM_IWGRP;
 futils.MSG_SAVE_AS = "Save As";
 futils.MSG_OPEN = "Open";
 
-  futils.getPicker =
+futils.getPicker =
 function futils_nosepicker(initialPath, typeList, attribs) {
   const classes = Components.classes;
   const interfaces = Components.interfaces;

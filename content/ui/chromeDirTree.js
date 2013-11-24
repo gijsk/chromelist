@@ -17,9 +17,9 @@ var chromeDirTree = {
   getLevel:               cdt_getLevel,
   getParentIndex:         cdt_getParentIndex,
   getImageSrc:            function(row,col)         {},
-  getCellProperties:      function(row,col)         {},
+  getCellProperties:      cdt_getRowProps,
   getColumnProperties:    function(colid,col)       {},
-  getRowProperties:       function(row)             {},
+  getRowProperties:       cdt_getRowProps,
   hasNextSibling:         function(row,nextrow)     { return this.data[row].hasNext; },
   isContainer:            function(row)             { return true; },
   isContainerEmpty:       cdt_isContainerEmpty,
@@ -37,46 +37,46 @@ var chromeDirTree = {
   keypress:               cdt_keypress,
   click:                  cdt_click,
   sort:                   cdt_sort,
-  // Steal from chromeTree:
-  matchesSearch:          ct_matchesSearch,
+  invalidate:             cdt_invalidate,
 }
 
 
-function cdt_getCellText(row,column)
-{
+function cdt_getCellText(row,column) {
   return row == -1 ? "" : this.data[row].leafName;
 }
 
-function cdt_getLevel(row)
-{
+function cdt_getLevel(row) {
   if ((row < 0) || (row >= this.data.length))
     return 0; // Don't feed bogus, please.
 
   return this.data[row].level - 1; // Woo! Decrement because <tree> assumes lowest level is 0.
 }
 
-function cdt_isContainerEmpty(row)
-{ 
+function cdt_isContainerEmpty(row) { 
   if ((row < 0) || (row >= this.data.length)) // rows we don't know are empty.
     return true; 
   return this.data[row].empty;
 }
 
-function cdt_getParentIndex(row)
-{
+function cdt_getParentIndex(row) {
   if (row <= 0)
     return -1;
   return this.data[row].parentIndex;
 }
 
-function cdt_toggleOpenState(row)
-{
+function cdt_getRowProps(row) {
+  if (!this._expr) {
+    return "";
+  }
+  return this.data[row].filtered ? "filtered" : "unfiltered";
+}
+
+function cdt_toggleOpenState(row) {
   // Don't feed us nonsense.
   if (row < 0 || row > this.data.length)
     return;
 
-  if (this.isContainerOpen(row))
-  {
+  if (this.isContainerOpen(row)) {
     // The container is open, find all children and remove them.
     var currentLevel = this.getLevel(row);
     // last child to remove:
@@ -99,23 +99,22 @@ function cdt_toggleOpenState(row)
     // viewing. We need to cope with that:
     if (chromeTree.currentURL.indexOf(this.data[row].href) == 0
         && chromeTree.currentURL != this.data[row].href
-        && chromeTree.currentLevel > this.getLevel(row))
-    {
+        && chromeTree.currentLevel > this.getLevel(row)) {
       chromeTree.currentURL = this.data[row].href;
       chromeTree.updateView();
       this.selection.select(row);
       this.treebox.ensureRowIsVisible(row);
-    }
-    else if (chromeTree.currentURL == this.data[row].href)
-    {
+    } else if (chromeTree.currentURL == this.data[row].href) {
       this.selection.select(row);
       this.treebox.ensureRowIsVisible(row);
     }
-  }
-  else // Okay, this node was closed, we open it, we need to add the children.
-  {
-    for (var x = this.data[row].children.length - 1; x >= 0; --x)
-      this.data.splice(row + 1, 0, this.data[row].children[x]);
+  } else {
+    // Okay, this node was closed, we open it, we need to add the children.
+    for (var x = this.data[row].children.length - 1; x >= 0; --x) {
+      let newRow = this.data[row].children[x];
+      newRow.filtered = newRow.orig.filtered && newRow.orig.filtered.indexOf(expr) > -1;
+      this.data.splice(row + 1, 0, newRow);
+    }
 
     // Clean up
     this.updateParentIndices();
@@ -126,42 +125,36 @@ function cdt_toggleOpenState(row)
   }
 }
 
-function cdt_updateParentIndices()
-{
-  for (var x = 0; x < this.data.length; ++x)
-  {
+function cdt_updateParentIndices() {
+  for (var x = 0; x < this.data.length; ++x) {
     var pIndex = this.data[x].parent ? this.indexOfURL(this.data[x].parent) : -1;
     this.data[x].parentIndex = pIndex;
   }
 }
 
-function cdt_cdup()
-{
+function cdt_cdup() {
   var parentIndex = this.getParentIndex(this.selection.currentIndex);
-  if (parentIndex != -1)
-  {
+  if (parentIndex != -1) {
     this.changeDir(this.data[parentIndex].href, false);
     this.selection.select(parentIndex);
   }
 }
 
-function cdt_reselectCurrentDirectory()
-{
+function cdt_reselectCurrentDirectory() {
   var index = this.indexOfURL(chromeTree.currentURL);
   this.selection.select(index);
   this.treebox.ensureRowIsVisible(index);
 }
 
-function cdt_changeDir(href, forceOpen)
-{
+function cdt_changeDir(href, forceOpen) {
   // Hrmmm....
   if (!(/\/$/).test(href)) // No slash at the end? tsk.
     href = href + "/";
 
   var oldDir = chromeTree.currentURL;
   chromeTree.currentURL = href;
-  if (this.data.length == 0) // We need to create the full data array first.
-  {
+  if (this.data.length == 0) {
+    // We need to create the full data array first.
     this.data = this.generateData(chromeBrowser.chromeStructure);
     this.data.sort(dirSort);
     this.rowCount = this.data.length;
@@ -172,28 +165,24 @@ function cdt_changeDir(href, forceOpen)
   // Now we're sure we have a tree. Do something useful with it.
   var currentLevel = chromeTree.currentLevel;
   // open parent directories til we find the directory
-  for (var x = 0; x < this.data.length; ++x)
-  {
-    for (var y = this.data.length - 1; y >= x; --y)
-    {
+  for (var x = 0; x < this.data.length; ++x) {
+    for (var y = this.data.length - 1; y >= x; --y) {
       // Does the current row have a matching href?
       if (chromeTree.currentURL.indexOf(this.data[y].href) == 0
           // Is the level smaller (parent dir), or do we have an exactly matching URL?
-          && (this.getLevel(y) < currentLevel || chromeTree.currentURL == this.data[y].href))
-      {
+          && (this.getLevel(y) < currentLevel || chromeTree.currentURL == this.data[y].href)) {
         x = y;
         break;
       }
     }
 
-    if (chromeTree.currentURL.indexOf(this.data[x].href) == 0)
-    {
+    if (chromeTree.currentURL.indexOf(this.data[x].href) == 0) {
       // If the directory is not open, open it.
       if (!this.data[x].open && forceOpen)
         this.toggleOpenState(x);
 
-      if (chromeTree.currentURL == this.data[x].href) // Woo, we're done!
-      {
+      if (chromeTree.currentURL == this.data[x].href) {
+        // Woo, we're done!
         chromeTree.updateView();
         return;
       }
@@ -205,8 +194,8 @@ function cdt_changeDir(href, forceOpen)
   chromeTree.currentURL = oldDir;
 }
 
-function cdt_indexOfURL(href)
-{   // binary search to find an url in the chromeDirTree
+function cdt_indexOfURL(href) {
+  // binary search to find an url in the chromeDirTree
   var left = 0;
   var right = this.data.length - 1;
   href = href.replace(/\x2f/g, "\x01").toLowerCase();    // make '/' less than everything (except null)
@@ -233,32 +222,32 @@ function cdt_generateData(obj)
   var parentHRef = obj.href;
   if (parentHRef == "chrome://")
     parentHRef = "";
-  for (var dir in directories)
-  {
+  for (var dir in directories) {
     var dirObj = directories[dir];
     var childData = this.generateData(dirObj);
     if (childData.length > 0)
       childData[childData.length - 1].hasNext = false;
-    var dataObj = {leafName: dirObj.leafName, parent: parentHRef,
-      href: dirObj.href, open: false, level: dirObj.level,
-      empty: (childData.length == 0), children: childData,
-      hasNext: (parentHRef), parentIndex: -1};
+    var dataObj = {
+      leafName: dirObj.leafName,
+      parent: parentHRef,
+      href: dirObj.href,
+      open: false,
+      level: dirObj.level,
+      empty: (childData.length == 0),
+      children: childData,
+      orig: dirObj,
+      hasNext: !!(parentHRef),
+      parentIndex: -1
+    };
     data.push(dataObj);
   }
   return data.sort(dirSort);
 }
 
-function cdt_filter(expr)
-{
-  for (var i = 0; i < this.data.length; i++)
-  {
-    var obj = this.data[i];
-
-  }
+function cdt_filter(expr) {
 }
 
-function dirSort(a, b)
-{
+function dirSort(a, b) {
   // make '/' less than everything (except null)
   var tempA = a.href.replace(/\x2f/g, "\x01").toLowerCase();
   var tempB = b.href.replace(/\x2f/g, "\x01").toLowerCase();
@@ -271,21 +260,16 @@ function dirSort(a, b)
 }
 
 function cdt_sort() {
-  this.displayData = [];
-  var expr = chromeBrowser.search.expr;
-  const hideFiltered = false;
+  var expr = this._expr = chromeBrowser.search.expr;
   for (var row = 0; row < this.data.length; ++row) {
-    var fFiltered = this.matchesSearch(this.data[row], expr);
-    if (fFiltered || !hideFiltered) {
-      var fName = this.data[row].leafName;
-      var formattedData = {leafName: fName, size: "", icon: "", extension: "",
-                           filtered: fFiltered, isDirectory: true, orig: this.data[row]};
-      this.displayData.push(formattedData);
-    }
+    let origData = this.data[row].orig;
+    this.data[row].filtered = origData.filtered && origData.filtered.indexOf(expr) > -1;
   }
+  this.invalidate();
+}
 
+function cdt_invalidate() {
   this.treebox.rowCountChanged(0, -this.rowCount);
-  this.rowCount = this.displayData.length;
   this.treebox.rowCountChanged(0, this.rowCount);
 }
 
@@ -294,10 +278,8 @@ function cdt_sort() {
 // Handlers
 //////////////////////////////
 
-function cdt_click(event)
-{
-  if (event.button == 0 || event.button == 2)
-  {
+function cdt_click(event) {
+  if (event.button == 0 || event.button == 2) {
     var row = {};    var col = {};    var child = {};
     this.treebox.getCellAt(event.pageX, event.pageY, row, col, child);
     var index = this.selection.currentIndex;
@@ -308,14 +290,11 @@ function cdt_click(event)
   }
 }
 
-function cdt_keypress(event)
-{
-  if (event.keyCode == 13)
-  {
+function cdt_keypress(event) {
+  if (event.keyCode == 13) {
     var row = {};   var col = {};   var child = {};
     var index = this.selection.currentIndex;
-    if (this.data[index].href != chromeTree.currentURL)
-    {
+    if (this.data[index].href != chromeTree.currentURL) {
       this.changeDir(this.data[index].href, false);
       event.stopPropagation();
       event.preventDefault();

@@ -435,13 +435,19 @@ chromeBrowser.search._update =
 function ct_s_up(newExpr) {
   this._expr = newExpr.trim();
   var treeBox = document.getElementById("chrometreebox");
-  if (!this._expr)
+
+  chromeBrowser.chromeStructure.updateFilteredState(this._expr);
+
+  if (!this._expr) {
     treeBox.removeAttribute("filtered");
-  else
+    chromeDirTree.invalidate();
+  } else {
     treeBox.setAttribute("filtered", "true");
-  chromeTree.sort();
+    chromeTree.sort();
+    chromeDirTree.sort();
+  }
   chromeTree.treebox.clearStyleAndImageCaches();
-  chromeDirTree.sort();
+  chromeDirTree.treebox.clearStyleAndImageCaches();
 }
 chromeBrowser.search.__defineGetter__("expr", function _getSearch() { return this._expr;});
 chromeBrowser.search.__defineSetter__("expr", chromeBrowser.search._update);

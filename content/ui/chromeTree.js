@@ -13,7 +13,6 @@ var bytesMode = false;
 
 var chromeTree = {
   data:                 new Array(),
-  displayData:          new Array(),
   rowCount:             0,
   getCellText:          ct_getCellText,
   getCellProperties:    ct_getCellProperties,
@@ -46,7 +45,6 @@ var chromeTree = {
   canDrop:              function (aIndex, aOrientation) { return false; },
   drop:                 function (aIndex, aOrientation) { },
   _url:                 "",
-  matchesSearch:        ct_matchesSearch
 }
 
 chromeTree.__defineSetter__("currentURL", setChromeTreeURL);
@@ -72,11 +70,11 @@ function ct_getCellText(row, column)
   switch(column.id)
   {
     case "chromefilename":
-      return this.displayData[row].leafName;
+      return this.data[row].leafName;
     case "chromefilesize":
-      return this.displayData[row].size;
+      return this.data[row].size;
     case "chromefiletype":
-      return this.displayData[row].extension;
+      return this.data[row].extension;
     default:
       return " "; // shouldn't get here
   }
@@ -87,21 +85,21 @@ function ct_getCellProperties(row, col)
   if (row == -1)
     return;
   let rv = [];
-  if (col.id == "chromefilename" && this.displayData[row].isDirectory)
+  if (col.id == "chromefilename" && this.data[row].isDirectory) {
     rv.push("isFolder");
-  if (!this.displayData[row].filtered)
-    rv.push("unfiltered");
-  return rv;
+  }
+  rv.push(this.data[row].filtered ? "filtered" : "unfiltered");
+  return rv.join(' ');
 }
 
 function ct_getRowProperties(row)
 {
   let rv = [];
-  if (this.displayData[row].isDirectory)
+  if (this.data[row].isDirectory) {
     rv.push("isFolder");
-  if (this.displayData[row].filtered)
-  rv.push(this.displayData[row].filtered ? "filtered" : "unfiltered");
-  return rv;
+  }
+  rv.push(this.data[row].filtered ? "filtered" : "unfiltered");
+  return rv.join(' ');
 }
 
 // Get the extension on a (f)ile path.
@@ -117,8 +115,10 @@ function ct_getImageSrc(row, column)
 {
   if (row == -1)
     return "";
-  if (column.id == "chromefilename" && this.displayData[row].icon)
-    return this.displayData[row].icon;
+  if (column.id == "chromefilename" && this.data[row].icon) {
+    console.log(this.data[row].href, this.data[row].icon);
+    return this.data[row].icon;
+  }
   return "";
 }
 
@@ -133,8 +133,29 @@ function ct_cycleHeader(column)
   this.sort();
 }
 
-function ct_sort()
-{
+function ct_sort() {
+  var expr = this._expr = chromeBrowser.search.expr;
+  for (var row = 0; row < this.data.length; ++row) {
+    let rowObject = this.data[row];
+    let origData = rowObject.orig;
+    rowObject.leafName = origData.leafName;
+    rowObject.href = origData.href;
+    rowObject.filtered = origData && origData.filtered && origData.filtered.indexOf(expr) > -1;
+    rowObject.isDirectory = origData.isDirectory;
+    if (!("icon" in rowObject)) {
+      rowObject.icon = this.getFileIcon(row);
+    }
+    if (typeof rowObject.size == "undefined") {
+      rowObject.size = rowObject.orig.size;
+      rowObject.size = this.getFormattedFileSize(row);
+    }
+    if (typeof rowObject.extension == "undefined") {
+      rowObject.extension = this.getExtension(rowObject.leafName);
+    }
+    console.dir(rowObject);
+    console.dir(origData);
+  }
+
   if (document.getElementById('chromefilename').getAttribute("sortDirection") &&
       document.getElementById('chromefilename').getAttribute("sortDirection") != "natural")
   {
@@ -157,29 +178,9 @@ function ct_sort()
       this.data.reverse();
   }
 
-  delete this.displayData;
-  this.displayData = new Array();
-  var expr = chromeBrowser.search.expr;
-  const hideFiltered = false;
-  for (var row = 0; row < this.data.length; ++row)
-  {
-    var fFiltered = this.matchesSearch(this.data[row], expr)
-      if (fFiltered || !hideFiltered)
-      {
-        var fName = this.data[row].leafName;
-        var fSize = this.getFormattedFileSize(row);
-        var fExt = this.getExtension(this.data[row].leafName);
-        var fIcon = this.getFileIcon(row);
-        var fIsDir = this.data[row].isDirectory;
-        var formattedData = {leafName: fName, size: fSize, icon: fIcon,
-          extension: fExt, filtered: fFiltered,
-          isDirectory: fIsDir, orig: this.data[row]};
-        this.displayData.push(formattedData);
-      }
-  }
 
   this.treebox.rowCountChanged(0, -this.rowCount);
-  this.rowCount = this.displayData.length;
+  this.rowCount = this.data.length;
   this.treebox.rowCountChanged(0, this.rowCount);
 }
 
@@ -192,10 +193,10 @@ function ct_updateView(column, direction)
   {
     var dirs = position.directories;
     for (var key in dirs)
-      localTreeItems.push(dirs[key]);
+      localTreeItems.push({orig: dirs[key]});
     var files = position.files;
     for (var key in files)
-      localTreeItems.push(files[key]);
+      localTreeItems.push({orig: files[key]});
   }
   this.currentLevel = position.level;
 
@@ -203,7 +204,7 @@ function ct_updateView(column, direction)
   this.sort();
 
   chromeDirTree.reselectCurrentDirectory();  // select directory in chromeDirTree
-  if (this.displayData.length)
+  if (this.data.length)
     this.selection.select(0); // Select the first item.
 }
 
@@ -215,8 +216,7 @@ function ct_getFormattedFileSize(row)
     return "0" + (bytesMode ? "  " : " KB  ");
   if (bytesMode)
     return this.data[row].size + "  ";
-  else
-    return (Number(this.data[row].size / 1024).toFixed(2)) + " KB  ";
+  return (Number(this.data[row].size / 1024).toFixed(2)) + " KB  ";
 }
 
 function ct_getFileIcon(row)
@@ -237,7 +237,7 @@ function ct_popupShowing(event)
   if (this.selection.count != 1)
     return false; // cancel, we can't do anything? :S
 
-  var selectedItem = this.displayData[this.selection.currentIndex].orig;
+  var selectedItem = this.data[this.selection.currentIndex].orig;
 
   // Can't open or save a dir, nor copy contents:
   var isDir = selectedItem.isDirectory;
@@ -283,7 +283,7 @@ function ct_getCurrentHref()
 {
   if (this.selection.count != 1)
     return "";
-  var selectedItem = this.displayData[this.selection.currentIndex].orig;
+  var selectedItem = this.data[this.selection.currentIndex].orig;
   return selectedItem.href;
 }
 
@@ -291,7 +291,7 @@ function ct_getCurrentAbsoluteHref()
 {
   if (this.selection.count != 1)
     return "";
-  var selectedItem = this.displayData[this.selection.currentIndex].orig;
+  var selectedItem = this.data[this.selection.currentIndex].orig;
   return selectedItem.resolvedURI;
 }
 
@@ -299,7 +299,7 @@ function ct_getCurrentItem()
 {
   if (this.selection.count != 1)
     return null;
-  return this.displayData[this.selection.currentIndex].orig;
+  return this.data[this.selection.currentIndex].orig;
 }
 
 function compareName(a, b) {
@@ -348,7 +348,7 @@ function ct_dblClick(event)
   if (this.selection.currentIndex < 0 || this.selection.currentIndex >= this.rowCount)
     this.selection.currentIndex = this.rowCount - 1;
 
-  var f = this.displayData[this.selection.currentIndex].orig;
+  var f = this.data[this.selection.currentIndex].orig;
   if (f.isDirectory) // Open directories
   {
     chromeDirTree.changeDir(f.href, true);
@@ -356,59 +356,21 @@ function ct_dblClick(event)
   else // View file sources.
   {
     // View the source of rdf, dtd, xul or js files by default.
-    if ((/xul|js|rdf|dtd/).test(this.getExtension(f.leafName)))
-    {
+    if ((/xul|js|rdf|dtd/).test(this.getExtension(f.leafName))) {
       chromeBrowser.viewSourceOf(f.href);
-    }
-    else if (chromeBrowser.host == "Firefox")
-    {
+    } else if (chromeBrowser.host == "Firefox") {
       chromeBrowser.view(f.href);
-    }
-    else
-    {
+    } else {
       chromeBrowser.view(f.resolvedURI);
     }
   }
 }
 
-function ct_keypress(event)
-{
+function ct_keypress(event) {
   if (event.keyCode == 13)
   {
     var e = {button: 0, originalTarget: {localName: "treechildren"}};
     // Hack-er-tee-hack:
     this.dblClick(e);
   }
-}
-
-const CHROME_SCHEME_LEN = "chrome://".length;
-function ct_matchesSearch(obj, expr)
-{
-  if (!obj || !expr)
-    return true;
-
-  if (obj.leafName.indexOf(expr) > -1 ||
-      obj.href.indexOf(expr) > CHROME_SCHEME_LEN) // ignore "chrome://"
-  {
-    return true;
-  }
-  if (obj.isDirectory)
-  {
-    for (var k in obj.files)
-    {
-      if (k.indexOf(expr) > -1 || obj.files[k].href.indexOf(expr) > CHROME_SCHEME_LEN)
-        return true;
-    }
-    for (var k in obj.directories)
-    {
-      if (k.indexOf(expr) > -1)
-        return true;
-      var dir = obj.directories[k];
-      if (dir.href.indexOf(expr) > CHROME_SCHEME_LEN)
-        return true;
-      if (this.matchesSearch(dir, expr))
-        return true;
-    }
-  }
-  return false;
 }
