@@ -19,6 +19,7 @@
 .fileTree::-moz-tree-image
 {
   margin-right: 2px;
+  width: 16px;
 }
 
 

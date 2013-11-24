@@ -181,9 +181,8 @@ function parseManifest(chromeStructure, manifestContents, path, manifestList)
 
 function updateOverrides(chromeStructure, overrides, onlyOverrides)
 {
-  var overridden, override, manifest, flags, overriddenURI, expectedURI;
+  var overridden, override, manifest, flags, overriddenURI, expectedURI, overrideURI
   var prob, desc;
-  var onceResolved;
   var chromeOverrides = overrides;
   if (!chromeOverrides)
     chromeOverrides = chromeStructure.overrides;
@@ -196,10 +195,10 @@ function updateOverrides(chromeStructure, overrides, onlyOverrides)
     overriddenURI = Services.io.newURI(overridden, null, null);
     try {
       expectedURI = getRealURI(overriddenURI);
-      onceResolved = getMappedURI(overriddenURI);
+      overrideURI = getRealURI(override);
     }
     catch (ex) { /* If this fails, the chrome URI being overridden does not exist: */}
-    if ((!expectedURI || (onceResolved.spec != override)) && flags == "")
+    if ((!expectedURI || (expectedURI.spec != overrideURI.spec)) && flags == "")
     {
       desc = getStr("problem.override.notApplied", [overridden, override]);
       prob = {desc: desc, manifest: manifest, severity: "warning"};
@@ -265,21 +264,20 @@ function overrideFile(chromeStructure, overridden, override, expectedURI, manife
 
 function overrideJar(chromeStructure, overridden, override, expectedURI, manifest)
 {
-  var desc, prob;
+  let desc, prob;
   try {
-    var jarURI = expectedURI.QueryInterface(Ci.nsIJARURI);
-    var jarFileURL = jarURI.JARFile.QueryInterface(Ci.nsIFileURL);
-
-    // Doublecheck this jarfile exists:
-    if (!jarFileURL.file.exists())
-    {
-      desc = getStr("problem.override.noJarFile", [overridden, override]);
-      prob = {desc: desc, manifest: manifest, severity: "error"};
-      chromeBrowser.addProblem(prob);
-      return;
+    let jarURI = expectedURI.QueryInterface(Ci.nsIJARURI);
+    let zr;
+    try {
+      zr = getZipReaderForJARURL(jarURI);
+    } catch (ex) {
+      if (ex && ex.result && ex.result == Cr.NS_ERROR_FILE_TARGET_DOES_NOT_EXIST) {
+        desc = getStr("problem.override.noJarFile", [overridden, override]);
+        prob = {desc: desc, manifest: manifest, severity: "error"};
+        chromeBrowser.addProblem(prob);
+      }
+      throw ex; // Fall through to final catch block below
     }
-
-    let zr = new ZipReader(jarFileURL.file);
 
     // If we've survived opening it, check if what we really want from it:
     var path = jarURI.JAREntry;

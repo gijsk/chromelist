@@ -18,8 +18,8 @@ function getRealURI(uri) {
   if (typeof uri == "string")
     uri = Services.io.newURI(uri, null, null)
 
-      while (uri.scheme == "chrome")
-        uri = chromeReg.convertChromeURL(uri);
+  while (uri.scheme == "chrome")
+    uri = chromeReg.convertChromeURL(uri);
   return uri;
   //if (typeof uri == "string")
   //    return iosvc.newChannel(uri, null, null).URI;
@@ -73,18 +73,7 @@ function getDirInJAR(uri) {
  */
 function getEntriesInJARDir(fullURI) {
   fullURI.QueryInterface(Components.interfaces.nsIJARURI);
-  let jarFileURL = fullURI.JARFile;
-  let zr;
-  if (jarFileURL.scheme == "jar") {
-    jarFileURL.QueryInterface(Ci.nsIJARURI);
-    let outerURL = jarFileURL.JARFile;
-    outerURL.QueryInterface(Ci.nsIFileURL);
-    let outerReader = new ZipReader(outerURL.file);
-    zr = new NestedZipReader(outerReader, jarFileURL.JAREntry);
-  } else {
-    jarFileURL.QueryInterface(Ci.nsIFileURL);
-    zr = new ZipReader(jarFileURL.file);
-  }
+  let zr = getZipReaderForJARURL(fullURI);
   var strEntry = fullURI.JAREntry;
   // Be careful about empty entry (root of jar); nsIZipReader.getEntry balks
   if (strEntry)
@@ -98,6 +87,23 @@ function getEntriesInJARDir(fullURI) {
 
   var filter = escapedEntry + "?*~" + escapedEntry + "?*/?*";
   return [zr, zr.findEntries(filter)];
+}
+
+function getZipReaderForJARURL(fullURI) {
+  fullURI.QueryInterface(Components.interfaces.nsIJARURI);
+  let jarFileURL = fullURI.JARFile;
+  let zr;
+  if (jarFileURL.scheme == "jar") {
+    jarFileURL.QueryInterface(Ci.nsIJARURI);
+    let outerURL = jarFileURL.JARFile;
+    outerURL.QueryInterface(Ci.nsIFileURL);
+    let outerReader = new ZipReader(outerURL.file);
+    zr = new NestedZipReader(outerReader, jarFileURL.JAREntry);
+  } else {
+    jarFileURL.QueryInterface(Ci.nsIFileURL);
+    zr = new ZipReader(jarFileURL.file);
+  }
+  return zr;
 }
 
 /**

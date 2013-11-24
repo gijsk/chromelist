@@ -1,4 +1,5 @@
 ﻿<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
 <?xml-stylesheet href="chrome://chromelist/skin/" type="text/css"?>
 <!DOCTYPE window SYSTEM "chrome://chromelist/locale/chromelist.dtd">
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
@@ -76,7 +77,7 @@
             </statusbarpanel>
         </statusbar>
 
-        <popup id="chromemenu" onpopupshowing="return chromeTree.popupShowing(event);">
+        <menupopup id="chromemenu" onpopupshowing="return chromeTree.popupShowing(event);">
           <menuitem id="cx-open-ext" label="&cx.open;" accesskey="&cx.open.accesskey;"
                     oncommand="chromeBrowser.view(chromeTree.getCurrentAbsoluteHref());"
                     hidden="true"/>
@@ -131,7 +132,7 @@
           <menuitem id="cx-properties" label="&cx.properties;" accesskey="&cx.properties.accesskey;"
                     oncommand="chromeBrowser.showProperties(chromeTree.getCurrentItem());"/>
 
-        </popup>
+        </menupopup>
         <commandset id="chromelist-commands">
             <command id="chromelist-close-command" oncommand="chromeBrowser.close()"/>
             <command id="chromelist-problem-command" oncommand="chromeBrowser.showProblems()"/>

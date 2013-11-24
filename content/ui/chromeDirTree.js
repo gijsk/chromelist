@@ -36,8 +36,9 @@ var chromeDirTree = {
   canDrop:                function (aIndex, aOrientation) { return false; },
   keypress:               cdt_keypress,
   click:                  cdt_click,
+  sort:                   cdt_sort,
   // Steal from chromeTree:
-  matchesSearch:          ct_matchesSearch
+  matchesSearch:          ct_matchesSearch,
 }
 
 
@@ -267,6 +268,25 @@ function dirSort(a, b)
   if (tempA > tempB)
     return 1;
   return 0;
+}
+
+function cdt_sort() {
+  this.displayData = [];
+  var expr = chromeBrowser.search.expr;
+  const hideFiltered = false;
+  for (var row = 0; row < this.data.length; ++row) {
+    var fFiltered = this.matchesSearch(this.data[row], expr);
+    if (fFiltered || !hideFiltered) {
+      var fName = this.data[row].leafName;
+      var formattedData = {leafName: fName, size: "", icon: "", extension: "",
+                           filtered: fFiltered, isDirectory: true, orig: this.data[row]};
+      this.displayData.push(formattedData);
+    }
+  }
+
+  this.treebox.rowCountChanged(0, -this.rowCount);
+  this.rowCount = this.displayData.length;
+  this.treebox.rowCountChanged(0, this.rowCount);
 }
 
 

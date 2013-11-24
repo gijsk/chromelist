@@ -96,10 +96,12 @@ function ct_getCellProperties(row, col)
 
 function ct_getRowProperties(row)
 {
+  let rv = [];
+  if (col.id == "chromefilename" && this.displayData[row].isDirectory)
+    rv.push("isFolder");
   if (this.displayData[row].filtered)
-    return ["filtered"];
-  else
-    return ["unfiltered"];
+  rv.push(this.displayData[row].filtered ? "filtered" : "unfiltered");
+  return rv;
 }
 
 // Get the extension on a (f)ile path.
@@ -107,8 +109,7 @@ function ct_getExtension(f)
 {
   if (f.lastIndexOf(".") != -1)
     return f.substring(f.lastIndexOf(".") + 1, f.length).toLowerCase();
-  else
-    return "";
+  return "";
 }
 
 // Get the icons for the files
@@ -380,13 +381,14 @@ function ct_keypress(event)
   }
 }
 
+const CHROME_SCHEME_LEN = "chrome://".length;
 function ct_matchesSearch(obj, expr)
 {
   if (!obj || !expr)
     return true;
 
   if (obj.leafName.indexOf(expr) > -1 ||
-      obj.href.indexOf(expr) > CH_SCHEME) // ignore "chrome://"
+      obj.href.indexOf(expr) > CHROME_SCHEME_LEN) // ignore "chrome://"
   {
     return true;
   }
@@ -394,7 +396,7 @@ function ct_matchesSearch(obj, expr)
   {
     for (var k in obj.files)
     {
-      if (k.indexOf(expr) > -1 || obj.files[k].href.indexOf(expr) > CH_SCHEME)
+      if (k.indexOf(expr) > -1 || obj.files[k].href.indexOf(expr) > CHROME_SCHEME_LEN)
         return true;
     }
     for (var k in obj.directories)
@@ -402,7 +404,7 @@ function ct_matchesSearch(obj, expr)
       if (k.indexOf(expr) > -1)
         return true;
       var dir = obj.directories[k];
-      if (dir.href.indexOf(expr) > CH_SCHEME)
+      if (dir.href.indexOf(expr) > CHROME_SCHEME_LEN)
         return true;
       if (this.matchesSearch(dir, expr))
         return true;
