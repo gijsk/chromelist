@@ -59,7 +59,6 @@ function futils_nosepicker(initialPath, typeList, attribs) {
   const LOCALFILE_CTRID = "@mozilla.org/file/local;1";
 
   const nsIFilePicker = interfaces.nsIFilePicker;
-  const nsILocalFile = interfaces.nsILocalFile;
 
   var picker = classes[PICKER_CTRID].createInstance(nsIFilePicker);
   if (typeof attribs == "object") {
@@ -72,16 +71,12 @@ function futils_nosepicker(initialPath, typeList, attribs) {
   if (initialPath) {
     var localFile;
 
-    if (typeof initialPath == "string") {
-      localFile =
-        classes[LOCALFILE_CTRID].createInstance(nsILocalFile);
-      localFile.initWithPath(initialPath);
-    } else {
-      if (!(initialPath instanceof nsILocalFile))
-        throw "bad type for argument |initialPath|";
-
+    if (typeof initialPath == "string")
+      localFile = new LocalFile(initialPath);
+    else if (initialPath instanceof Ci.nsILocalFile)
       localFile = initialPath;
-    }
+    else
+      throw "bad type for argument |initialPath|";
 
     picker.displayDirectory = localFile
   }
@@ -198,116 +193,6 @@ function mkdir (localFile, perms) {
   localFile.create(FTYPE_DIR, perms);
 }
 
-function nsLocalFile(path) {
-  const LOCALFILE_CTRID = "@mozilla.org/file/local;1";
-  const nsILocalFile = Components.interfaces.nsILocalFile;
-
-  var localFile =
-    Components.classes[LOCALFILE_CTRID].createInstance(nsILocalFile);
-  localFile.initWithPath(path);
-  return localFile;
-}
-
-function fopen (path, mode, perms, tmp) {
-  return new LocalFile(path, mode, perms, tmp);
-}
-
-function LocalFile(file, mode, perms, tmp) {
-  const classes = Components.classes;
-  const interfaces = Components.interfaces;
-
-  const LOCALFILE_CTRID = "@mozilla.org/file/local;1";
-  const FILEIN_CTRID = "@mozilla.org/network/file-input-stream;1";
-  const FILEOUT_CTRID = "@mozilla.org/network/file-output-stream;1";
-  const SCRIPTSTREAM_CTRID = "@mozilla.org/scriptableinputstream;1";
-
-  const nsIFile = interfaces.nsIFile;
-  const nsILocalFile = interfaces.nsILocalFile;
-  const nsIFileOutputStream = interfaces.nsIFileOutputStream;
-  const nsIFileInputStream = interfaces.nsIFileInputStream;
-  const nsIScriptableInputStream = interfaces.nsIScriptableInputStream;
-
-  if (typeof perms == "undefined")
-    perms = 0666 & ~futils.umask;
-
-  if (typeof mode == "string") {
-    switch (mode) {
-      case ">":
-        mode = MODE_WRONLY | MODE_CREATE | MODE_TRUNCATE;
-        break;
-      case ">>":
-        mode = MODE_WRONLY | MODE_CREATE | MODE_APPEND;
-        break;
-      case "<":
-        mode = MODE_RDONLY;
-        break;
-      default:
-        throw "Invalid mode ``" + mode + "''";
-    }
-  }
-
-  if (typeof file == "string")
-    this.localFile = new nsLocalFile(file);
-  else if (file instanceof nsILocalFile)
-    this.localFile = file;
-  else
-    throw "bad type for argument |file|.";
-
-  this.path = this.localFile.path;
-
-  if (mode & (MODE_WRONLY | MODE_RDWR)) {
-    this.outputStream =
-      classes[FILEOUT_CTRID].createInstance(nsIFileOutputStream);
-    this.outputStream.init(this.localFile, mode, perms, 0);
-  }
-
-  if (mode & (MODE_RDONLY | MODE_RDWR)) {
-    this.baseInputStream =
-      classes[FILEIN_CTRID].createInstance(nsIFileInputStream);
-    this.baseInputStream.init(this.localFile, mode, perms, tmp);
-    this.inputStream =
-      classes[SCRIPTSTREAM_CTRID].createInstance(nsIScriptableInputStream);
-    this.inputStream.init(this.baseInputStream);
-  }
-}
-
-LocalFile.prototype.write =
-function fo_write(buf) {
-  if (!("outputStream" in this))
-    throw "file not open for writing.";
-
-  return this.outputStream.write(buf, buf.length);
-}
-
-LocalFile.prototype.read =
-function fo_read(max) {
-  if (!("inputStream" in this))
-    throw "file not open for reading.";
-
-  var av = this.inputStream.available();
-  if (typeof max == "undefined")
-    max = av;
-
-  if (!av)
-    return null;
-
-  var rv = this.inputStream.read(max);
-  return rv;
-}
-
-LocalFile.prototype.close =
-function fo_close() {
-  if ("outputStream" in this)
-    this.outputStream.close();
-  if ("inputStream" in this)
-    this.inputStream.close();
-}
-
-  LocalFile.prototype.flush =
-function fo_close() {
-  return this.outputStream.flush();
-}
-
 /**
  * Write a file to a jar
  * @param jarFilePath {string} the path to the jar to write to
@@ -327,7 +212,7 @@ function writeFileToJar(jarFilePath, entryPath, filePath) {
   var zipWriter = Components.Constructor("@mozilla.org/zipwriter;1", "nsIZipWriter");
   var zipW = new zipWriter();
 
-  var jarFile = nsLocalFile(jarFilePath);
+  var jarFile = new LocalFile(jarFilePath);
   zipW.open(jarFile, PR_RDWR);
   if (zipW.hasEntry(entryPath))
     zipW.removeEntry(entryPath, false);

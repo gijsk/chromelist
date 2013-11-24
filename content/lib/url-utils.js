@@ -131,28 +131,9 @@ function getURLSpecFromFile (file) {
     return null;
 
   if (typeof file == "string")
-    file = localFile(file);
+    file = new LocalFile(file);
 
   let fileHandler = Services.io.getProtocolHandler("file");
   fileHandler = fileHandler.QueryInterface(Ci.nsIFileProtocolHandler);
   return fileHandler.getURLSpecFromFile(file);
-}
-
-/**
- * Create a local file from a path
- * @param path {string} the path to the file
- * @returns {nsILocalFile} the local file object
- */
-function localFile(path) {
-  const LOCALFILE_CTRID = "@mozilla.org/file/local;1";
-  const nsILocalFile = Components.interfaces.nsILocalFile;
-
-  if (typeof path == "string")
-  {
-    var fileObj =
-      Components.classes[LOCALFILE_CTRID].createInstance(nsILocalFile);
-    fileObj.initWithPath(path);
-    return fileObj;
-  }
-  return null;
 }

@@ -23,6 +23,6 @@ XPCOMUtils.defineLazyServiceGetter(this, "protosvc", "@mozilla.org/uriloader/ext
 
 let ZipReader = Components.Constructor("@mozilla.org/libjar/zip-reader;1", "nsIZipReader", "open");
 let NestedZipReader = Components.Constructor("@mozilla.org/libjar/zip-reader;1", "nsIZipReader", "openInner");
-let FileRef = Components.Constructor("@mozilla.org/file/local;1", "nsILocalFile", "initWithPath");
+let LocalFile = Components.Constructor("@mozilla.org/file/local;1", "nsILocalFile", "initWithPath");
 
 

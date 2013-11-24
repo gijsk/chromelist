@@ -386,8 +386,8 @@ function cb_replace(item) {
 
 chromeBrowser._replaceFile =
 function cb_internalReplaceFile(destPath, sourceFile) {
-  var f = nsLocalFile(destPath);
-  var originalF = nsLocalFile(destPath);
+  var f = new LocalFile(destPath);
+  var originalF = new LocalFile(destPath);
   var targetName = f.leafName;
   // What can I say, the copyTo API sucks. It won't overwrite files, ever.
   // So, we try to do our own logic here...
