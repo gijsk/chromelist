@@ -1,10 +1,4 @@
 // Maps the chrome's structure.
-// This code probably looks strange. Why not a simple for loop, you wonder?
-// Well, because even on my (somewhat fast) pc, it takes about a second to
-// parse all the manifests and make a tree. On extension-loaded browsers,
-// on slow machines, it might well take *very* long. So I'm trying hard not
-// to hang the UI.
-
 // To be called once we're done:
 var finalCallbackFunction;
 
