@@ -48,7 +48,7 @@ function ChromeDirectory(someParent, name, manifest, flags)
     // If this is somewhere down, resolve stuff:
     if (this.level >= 2)
     {
-        var resolvedURI = chromeReg.convertChromeURL(iosvc.newURI(this.href, null, null));
+        var resolvedURI = chromeReg.convertChromeURL(Services.io.newURI(this.href, null, null));
         this.scheme = resolvedURI.scheme;
         this.resolvedURI = resolvedURI.spec;
         if (this.level == 2) // we're looking at the magic file for our resolved URI, fix:

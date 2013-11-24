@@ -3,11 +3,10 @@
  * @param uri the string or nsIURI uri to get the mapping for
  * @returns the chrome registry's info about the URI
  */
-function getMappedURI(uri)
-{
-    if (typeof uri == "string")
-        uri = iosvc.newURI(uri, null, null);
-    return chromeReg.convertChromeURL(uri);
+function getMappedURI(uri) {
+  if (typeof uri == "string")
+    uri = Services.io.newURI(uri, null, null);
+  return chromeReg.convertChromeURL(uri);
 }
 
 /**
@@ -15,17 +14,16 @@ function getMappedURI(uri)
  * @param uri the string or nsIURI uri to get a mapping for
  * @returns the corresponding URI
  */
-function getRealURI(uri)
-{
-    if (typeof uri == "string")
-        uri = iosvc.newURI(uri, null, null)
-    
-    while (uri.scheme == "chrome")
+function getRealURI(uri) {
+  if (typeof uri == "string")
+    uri = Services.io.newURI(uri, null, null)
+
+      while (uri.scheme == "chrome")
         uri = chromeReg.convertChromeURL(uri);
-    return uri;
-    //if (typeof uri == "string")
-    //    return iosvc.newChannel(uri, null, null).URI;
-    //return iosvc.newChannelFromURI(uri).URI;
+  return uri;
+  //if (typeof uri == "string")
+  //    return iosvc.newChannel(uri, null, null).URI;
+  //return iosvc.newChannelFromURI(uri).URI;
 }
 
 /**
@@ -33,14 +31,13 @@ function getRealURI(uri)
  * @param uri {nsIURI OR string} the string or nsIURI uri to get a file path for
  * @returns {string} the corresponding path
  */
-function getJARFileForURI(uri)
-{
-    if (typeof uri == "string")
-        uri = iosvc.newURI(uri, null, null);
+function getJARFileForURI(uri) {
+  if (typeof uri == "string")
+    uri = Services.io.newURI(uri, null, null);
 
-    uri.QueryInterface(Components.interfaces.nsIJARURI);
-    var file = getFileFromURLSpec(uri.JARFile.spec);
-    return file.path;
+  uri.QueryInterface(Components.interfaces.nsIJARURI);
+  var file = getFileFromURLSpec(uri.JARFile.spec);
+  return file.path;
 }
 
 /**
@@ -48,13 +45,12 @@ function getJARFileForURI(uri)
  * @param uri to something
  * @returns the corresponding file path (to the jar if applicable)
  */
-function getPathForURI(uri)
-{
-    if (uri.substring(0, 4) == "file")
-        return getFileFromURLSpec(uri).path;
-    if (uri.substring(0, 3) == "jar")
-        return getJARFileForURI(uri);
-    return "";
+function getPathForURI(uri) {
+  if (uri.substring(0, 4) == "file")
+    return getFileFromURLSpec(uri).path;
+  if (uri.substring(0, 3) == "jar")
+    return getJARFileForURI(uri);
+  return "";
 }
 
 /**
@@ -62,12 +58,11 @@ function getPathForURI(uri)
  * @param uri the jar URI (string or nsIURI)
  * @returns the entry path (string)
  */
-function getDirInJAR(uri)
-{
-    if (typeof uri == "string")
-        uri = iosvc.newURI(uri, null, null);
-    uri.QueryInterface(Components.interfaces.nsIJARURI);
-    return uri.JAREntry;
+function getDirInJAR(uri) {
+  if (typeof uri == "string")
+    uri = Services.io.newURI(uri, null, null);
+  uri.QueryInterface(Components.interfaces.nsIJARURI);
+  return uri.JAREntry;
 }
 
 /**
@@ -76,25 +71,33 @@ function getDirInJAR(uri)
  * @returns {nsISimpleEnumerator} an enumerator of the entries.
  * @note modelled after nsJARDirectoryInputStream::Init
  */
-function getEntriesInJARDir(uri)
-{
-    uri.QueryInterface(Components.interfaces.nsIJARURI);
-    var zr = newObject("@mozilla.org/libjar/zip-reader;1",
-                       Components.interfaces.nsIZipReader);
-    zr.open(uri.JARFile.QueryInterface(Components.interfaces.nsIFileURL).file);
-    var strEntry = uri.JAREntry;
-    // Be careful about empty entry (root of jar); nsIZipReader.getEntry balks
-    if (strEntry)
-    {
-        var realEntry = zr.getEntry(strEntry);
-        if (!realEntry.isDirectory)
-                throw strEntry + " is not a directory!";
-    }
+function getEntriesInJARDir(fullURI) {
+  fullURI.QueryInterface(Components.interfaces.nsIJARURI);
+  let jarFileURL = fullURI.JARFile;
+  let zr;
+  if (jarFileURL.scheme == "jar") {
+    jarFileURL.QueryInterface(Ci.nsIJARURI);
+    let outerURL = jarFileURL.JARFile;
+    outerURL.QueryInterface(Ci.nsIFileURL);
+    let outerReader = new ZipReader(outerURL.file);
+    zr = new NestedZipReader(outerReader, jarFileURL.JAREntry);
+  } else {
+    jarFileURL.QueryInterface(Ci.nsIFileURL);
+    zr = new ZipReader(jarFileURL.file);
+  }
+  var strEntry = fullURI.JAREntry;
+  // Be careful about empty entry (root of jar); nsIZipReader.getEntry balks
+  if (strEntry)
+  {
+    var realEntry = zr.getEntry(strEntry);
+    if (!realEntry.isDirectory)
+      throw strEntry + " is not a directory!";
+  }
 
-    var escapedEntry = escapeJAREntryForFilter(strEntry);
+  var escapedEntry = escapeJAREntryForFilter(strEntry);
 
-    var filter = escapedEntry + "?*~" + escapedEntry + "?*/?*";
-    return [zr, zr.findEntries(filter)];
+  var filter = escapedEntry + "?*~" + escapedEntry + "?*/?*";
+  return [zr, zr.findEntries(filter)];
 }
 
 /**
@@ -102,17 +105,20 @@ function getEntriesInJARDir(uri)
  * @param {string} original entry name
  * @returns {string} escaped entry name
  */
-function escapeJAREntryForFilter(entryName)
-{
-    return entryName.replace(/([\*\?\$\[\]\^\~\(\)\\])/g, "\\$1");
+function escapeJAREntryForFilter(entryName) {
+  return entryName.replace(/([\*\?\$\[\]\^\~\(\)\\])/g, "\\$1");
 }
 
-function getFileFromURLSpec(url)
-{
-    const nsIFileProtocolHandler = Components.interfaces.nsIFileProtocolHandler;
-    var handler = iosvc.getProtocolHandler("file");
-    handler = handler.QueryInterface(nsIFileProtocolHandler);
-    return handler.getFileFromURLSpec(url);
+function getFileFromURLSpec(url) {
+  let handler = Services.io.getProtocolHandler("file");
+  handler = handler.QueryInterface(Ci.nsIFileProtocolHandler);
+  let uri = Services.io.newURI(url, null, null);
+  while (uri.scheme == "jar") {
+    uri.QueryInterface(Ci.nsIJARURI);
+    uri = uri.JARFile;
+  }
+  let rv = handler.getFileFromURLSpec(uri.spec);
+  return rv;
 }
 
 /**
@@ -120,22 +126,16 @@ function getFileFromURLSpec(url)
  * @param file {nsIFile OR string} the path to the file, or a file object
  * @returns the URL spec for the file.
  */
-function getURLSpecFromFile (file)
-{
-    if (!file)
-        return null;
+function getURLSpecFromFile (file) {
+  if (!file)
+    return null;
 
-    const IOS_CTRID = "@mozilla.org/network/io-service;1";
-    const nsIIOService = Components.interfaces.nsIIOService;
+  if (typeof file == "string")
+    file = localFile(file);
 
-    if (typeof file == "string")
-        file = localFile(file);
-
-    var service = Components.classes[IOS_CTRID].getService(nsIIOService);
-    var nsIFileProtocolHandler = Components.interfaces.nsIFileProtocolHandler;
-    var fileHandler = service.getProtocolHandler("file");
-    fileHandler = fileHandler.QueryInterface(nsIFileProtocolHandler);
-    return fileHandler.getURLSpecFromFile(file);
+  let fileHandler = Services.io.getProtocolHandler("file");
+  fileHandler = fileHandler.QueryInterface(Ci.nsIFileProtocolHandler);
+  return fileHandler.getURLSpecFromFile(file);
 }
 
 /**
@@ -143,17 +143,16 @@ function getURLSpecFromFile (file)
  * @param path {string} the path to the file
  * @returns {nsILocalFile} the local file object
  */
-function localFile(path)
-{
-    const LOCALFILE_CTRID = "@mozilla.org/file/local;1";
-    const nsILocalFile = Components.interfaces.nsILocalFile;
+function localFile(path) {
+  const LOCALFILE_CTRID = "@mozilla.org/file/local;1";
+  const nsILocalFile = Components.interfaces.nsILocalFile;
 
-    if (typeof path == "string")
-    {
-        var fileObj =
-            Components.classes[LOCALFILE_CTRID].createInstance(nsILocalFile);
-        fileObj.initWithPath(path);
-        return fileObj;
-    }
-    return null;
+  if (typeof path == "string")
+  {
+    var fileObj =
+      Components.classes[LOCALFILE_CTRID].createInstance(nsILocalFile);
+    fileObj.initWithPath(path);
+    return fileObj;
+  }
+  return null;
 }

@@ -83,297 +83,262 @@ futils.umask = PERM_IWOTH | PERM_IWGRP;
 futils.MSG_SAVE_AS = "Save As";
 futils.MSG_OPEN = "Open";
 
-futils.getPicker =
-function futils_nosepicker(initialPath, typeList, attribs)
-{
-    const classes = Components.classes;
-    const interfaces = Components.interfaces;
+  futils.getPicker =
+function futils_nosepicker(initialPath, typeList, attribs) {
+  const classes = Components.classes;
+  const interfaces = Components.interfaces;
 
-    const PICKER_CTRID = "@mozilla.org/filepicker;1";
-    const LOCALFILE_CTRID = "@mozilla.org/file/local;1";
+  const PICKER_CTRID = "@mozilla.org/filepicker;1";
+  const LOCALFILE_CTRID = "@mozilla.org/file/local;1";
 
-    const nsIFilePicker = interfaces.nsIFilePicker;
-    const nsILocalFile = interfaces.nsILocalFile;
+  const nsIFilePicker = interfaces.nsIFilePicker;
+  const nsILocalFile = interfaces.nsILocalFile;
 
-    var picker = classes[PICKER_CTRID].createInstance(nsIFilePicker);
-    if (typeof attribs == "object")
-    {
-        for (var a in attribs)
-            picker[a] = attribs[a];
-    }
-    else
-        throw "bad type for param |attribs|";
+  var picker = classes[PICKER_CTRID].createInstance(nsIFilePicker);
+  if (typeof attribs == "object") {
+    for (var a in attribs)
+      picker[a] = attribs[a];
+  }
+  else
+    throw "bad type for param |attribs|";
 
-    if (initialPath)
-    {
-        var localFile;
+  if (initialPath) {
+    var localFile;
 
-        if (typeof initialPath == "string")
-        {
-            localFile =
-                classes[LOCALFILE_CTRID].createInstance(nsILocalFile);
-            localFile.initWithPath(initialPath);
-        }
-        else
-        {
-            if (!(initialPath instanceof nsILocalFile))
-                throw "bad type for argument |initialPath|";
+    if (typeof initialPath == "string") {
+      localFile =
+        classes[LOCALFILE_CTRID].createInstance(nsILocalFile);
+      localFile.initWithPath(initialPath);
+    } else {
+      if (!(initialPath instanceof nsILocalFile))
+        throw "bad type for argument |initialPath|";
 
-            localFile = initialPath;
-        }
-
-        picker.displayDirectory = localFile
+      localFile = initialPath;
     }
 
-    var allIncluded = false;
+    picker.displayDirectory = localFile
+  }
 
-    if (typeof typeList == "string")
-        typeList = typeList.split(" ");
+  var allIncluded = false;
 
-    if (typeList instanceof Array)
-    {
-        for (var i in typeList)
-        {
-            switch (typeList[i])
-            {
-                case "$all":
-                    allIncluded = true;
-                    picker.appendFilters(FILTER_ALL);
-                    break;
+  if (typeof typeList == "string")
+    typeList = typeList.split(" ");
 
-                case "$html":
-                    picker.appendFilters(FILTER_HTML);
-                    break;
+  if (typeList instanceof Array) {
+    for (var i in typeList) {
+      switch (typeList[i]) {
+        case "$all":
+          allIncluded = true;
+          picker.appendFilters(FILTER_ALL);
+          break;
 
-                case "$text":
-                    picker.appendFilters(FILTER_TEXT);
-                    break;
+        case "$html":
+          picker.appendFilters(FILTER_HTML);
+          break;
 
-                case "$images":
-                    picker.appendFilters(FILTER_IMAGES);
-                    break;
+        case "$text":
+          picker.appendFilters(FILTER_TEXT);
+          break;
 
-                case "$xml":
-                    picker.appendFilters(FILTER_XML);
-                    break;
+        case "$images":
+          picker.appendFilters(FILTER_IMAGES);
+          break;
 
-                case "$xul":
-                    picker.appendFilters(FILTER_XUL);
-                    break;
+        case "$xml":
+          picker.appendFilters(FILTER_XML);
+          break;
 
-                case "$noAll":
-                    // This prevents the automatic addition of "All Files"
-                    // as a file type option by pretending it is already there.
-                    allIncluded = true;
-                    break;
+        case "$xul":
+          picker.appendFilters(FILTER_XUL);
+          break;
 
-                default:
-                    if ((typeof typeList[i] == "object") && isinstance(typeList[i], Array))
-                        picker.appendFilter(typeList[i][0], typeList[i][1]);
-                    else
-                        picker.appendFilter(typeList[i], typeList[i]);
-                    break;
-            }
-        }
+        case "$noAll":
+          // This prevents the automatic addition of "All Files"
+          // as a file type option by pretending it is already there.
+          allIncluded = true;
+          break;
+
+        default:
+          if ((typeof typeList[i] == "object") && isinstance(typeList[i], Array))
+            picker.appendFilter(typeList[i][0], typeList[i][1]);
+          else
+            picker.appendFilter(typeList[i], typeList[i]);
+          break;
+      }
     }
+  }
 
-    if (!allIncluded)
-        picker.appendFilters(FILTER_ALL);
+  if (!allIncluded)
+    picker.appendFilters(FILTER_ALL);
 
-    return picker;
+  return picker;
 }
 
-function pickSaveAs (title, typeList, defaultFile, defaultDir, defaultExt)
-{
-    if (!defaultDir && "lastSaveAsDir" in futils)
-        defaultDir = futils.lastSaveAsDir;
+function pickSaveAs (title, typeList, defaultFile, defaultDir, defaultExt) {
+  if (!defaultDir && "lastSaveAsDir" in futils)
+    defaultDir = futils.lastSaveAsDir;
 
-    var picker = futils.getPicker (defaultDir, typeList,
-                                   {defaultString: defaultFile,
-                                    defaultExtension: defaultExt});
-    picker.init (window, title ? title : futils.MSG_SAVE_AS,
-                 Components.interfaces.nsIFilePicker.modeSave);
+  var picker = futils.getPicker (defaultDir, typeList,
+      {defaultString: defaultFile,
+        defaultExtension: defaultExt});
+  picker.init (window, title ? title : futils.MSG_SAVE_AS,
+      Components.interfaces.nsIFilePicker.modeSave);
 
-    var reason;
+  var reason;
 
-    try
-    {
-        reason = picker.show();
-    }
-    catch (ex)
-    {
-        dd ("caught exception from file picker: " + ex);
-    }
+  try {
+    reason = picker.show();
+  } catch (ex) {
+    dd ("caught exception from file picker: " + ex);
+  }
 
-    var obj = new Object();
+  var obj = new Object();
 
-    obj.reason = reason;
-    obj.picker = picker;
+  obj.reason = reason;
+  obj.picker = picker;
 
-    if (reason != PICK_CANCEL)
-    {
-        obj.file = picker.file;
-        futils.lastSaveAsDir = picker.file.parent;
-    }
-    else
-    {
-        obj.file = null;
-    }
+  if (reason != PICK_CANCEL) {
+    obj.file = picker.file;
+    futils.lastSaveAsDir = picker.file.parent;
+  } else {
+    obj.file = null;
+  }
 
-    return obj;
+  return obj;
 }
 
-function pickOpen (title, typeList, defaultFile, defaultDir)
-{
-    if (!defaultDir && "lastOpenDir" in futils)
-        defaultDir = futils.lastOpenDir;
+function pickOpen (title, typeList, defaultFile, defaultDir) {
+  if (!defaultDir && "lastOpenDir" in futils)
+    defaultDir = futils.lastOpenDir;
 
-    var picker = futils.getPicker (defaultDir, typeList,
-                                   {defaultString: defaultFile});
-    picker.init (window, title ? title : futils.MSG_OPEN,
-                 Components.interfaces.nsIFilePicker.modeOpen);
+  var picker = futils.getPicker (defaultDir, typeList,
+      {defaultString: defaultFile});
+  picker.init (window, title ? title : futils.MSG_OPEN,
+      Components.interfaces.nsIFilePicker.modeOpen);
 
-    var rv = picker.show();
+  var rv = picker.show();
 
-    if (rv != PICK_CANCEL)
-        futils.lastOpenDir = picker.file.parent;
+  if (rv != PICK_CANCEL)
+    futils.lastOpenDir = picker.file.parent;
 
-    return {reason: rv, file: picker.file, picker: picker};
+  return {reason: rv, file: picker.file, picker: picker};
 }
 
-function mkdir (localFile, perms)
-{
-    if (typeof perms == "undefined")
-        perms = 0766 & ~futils.umask;
+function mkdir (localFile, perms) {
+  if (typeof perms == "undefined")
+    perms = 0766 & ~futils.umask;
 
-    localFile.create(FTYPE_DIR, perms);
+  localFile.create(FTYPE_DIR, perms);
 }
 
-function nsLocalFile(path)
-{
-    const LOCALFILE_CTRID = "@mozilla.org/file/local;1";
-    const nsILocalFile = Components.interfaces.nsILocalFile;
+function nsLocalFile(path) {
+  const LOCALFILE_CTRID = "@mozilla.org/file/local;1";
+  const nsILocalFile = Components.interfaces.nsILocalFile;
 
-    var localFile =
-        Components.classes[LOCALFILE_CTRID].createInstance(nsILocalFile);
-    localFile.initWithPath(path);
-    return localFile;
+  var localFile =
+    Components.classes[LOCALFILE_CTRID].createInstance(nsILocalFile);
+  localFile.initWithPath(path);
+  return localFile;
 }
 
-function fopen (path, mode, perms, tmp)
-{
-    return new LocalFile(path, mode, perms, tmp);
+function fopen (path, mode, perms, tmp) {
+  return new LocalFile(path, mode, perms, tmp);
 }
 
-function LocalFile(file, mode, perms, tmp)
-{
-    const classes = Components.classes;
-    const interfaces = Components.interfaces;
+function LocalFile(file, mode, perms, tmp) {
+  const classes = Components.classes;
+  const interfaces = Components.interfaces;
 
-    const LOCALFILE_CTRID = "@mozilla.org/file/local;1";
-    const FILEIN_CTRID = "@mozilla.org/network/file-input-stream;1";
-    const FILEOUT_CTRID = "@mozilla.org/network/file-output-stream;1";
-    const SCRIPTSTREAM_CTRID = "@mozilla.org/scriptableinputstream;1";
+  const LOCALFILE_CTRID = "@mozilla.org/file/local;1";
+  const FILEIN_CTRID = "@mozilla.org/network/file-input-stream;1";
+  const FILEOUT_CTRID = "@mozilla.org/network/file-output-stream;1";
+  const SCRIPTSTREAM_CTRID = "@mozilla.org/scriptableinputstream;1";
 
-    const nsIFile = interfaces.nsIFile;
-    const nsILocalFile = interfaces.nsILocalFile;
-    const nsIFileOutputStream = interfaces.nsIFileOutputStream;
-    const nsIFileInputStream = interfaces.nsIFileInputStream;
-    const nsIScriptableInputStream = interfaces.nsIScriptableInputStream;
+  const nsIFile = interfaces.nsIFile;
+  const nsILocalFile = interfaces.nsILocalFile;
+  const nsIFileOutputStream = interfaces.nsIFileOutputStream;
+  const nsIFileInputStream = interfaces.nsIFileInputStream;
+  const nsIScriptableInputStream = interfaces.nsIScriptableInputStream;
 
-    if (typeof perms == "undefined")
-        perms = 0666 & ~futils.umask;
+  if (typeof perms == "undefined")
+    perms = 0666 & ~futils.umask;
 
-    if (typeof mode == "string")
-    {
-        switch (mode)
-        {
-            case ">":
-                mode = MODE_WRONLY | MODE_CREATE | MODE_TRUNCATE;
-                break;
-            case ">>":
-                mode = MODE_WRONLY | MODE_CREATE | MODE_APPEND;
-                break;
-            case "<":
-                mode = MODE_RDONLY;
-                break;
-            default:
-                throw "Invalid mode ``" + mode + "''";
-        }
+  if (typeof mode == "string") {
+    switch (mode) {
+      case ">":
+        mode = MODE_WRONLY | MODE_CREATE | MODE_TRUNCATE;
+        break;
+      case ">>":
+        mode = MODE_WRONLY | MODE_CREATE | MODE_APPEND;
+        break;
+      case "<":
+        mode = MODE_RDONLY;
+        break;
+      default:
+        throw "Invalid mode ``" + mode + "''";
     }
+  }
 
-    if (typeof file == "string")
-    {
-        this.localFile = new nsLocalFile(file);
-    }
-    else if (file instanceof nsILocalFile)
-    {
-        this.localFile = file;
-    }
-    else
-    {
-        throw "bad type for argument |file|.";
-    }
+  if (typeof file == "string")
+    this.localFile = new nsLocalFile(file);
+  else if (file instanceof nsILocalFile)
+    this.localFile = file;
+  else
+    throw "bad type for argument |file|.";
 
-    this.path = this.localFile.path;
+  this.path = this.localFile.path;
 
-    if (mode & (MODE_WRONLY | MODE_RDWR))
-    {
-        this.outputStream =
-            classes[FILEOUT_CTRID].createInstance(nsIFileOutputStream);
-        this.outputStream.init(this.localFile, mode, perms, 0);
-    }
+  if (mode & (MODE_WRONLY | MODE_RDWR)) {
+    this.outputStream =
+      classes[FILEOUT_CTRID].createInstance(nsIFileOutputStream);
+    this.outputStream.init(this.localFile, mode, perms, 0);
+  }
 
-    if (mode & (MODE_RDONLY | MODE_RDWR))
-    {
-        this.baseInputStream =
-            classes[FILEIN_CTRID].createInstance(nsIFileInputStream);
-        this.baseInputStream.init(this.localFile, mode, perms, tmp);
-        this.inputStream =
-            classes[SCRIPTSTREAM_CTRID].createInstance(nsIScriptableInputStream);
-        this.inputStream.init(this.baseInputStream);
-    }
+  if (mode & (MODE_RDONLY | MODE_RDWR)) {
+    this.baseInputStream =
+      classes[FILEIN_CTRID].createInstance(nsIFileInputStream);
+    this.baseInputStream.init(this.localFile, mode, perms, tmp);
+    this.inputStream =
+      classes[SCRIPTSTREAM_CTRID].createInstance(nsIScriptableInputStream);
+    this.inputStream.init(this.baseInputStream);
+  }
 }
 
 LocalFile.prototype.write =
-function fo_write(buf)
-{
-    if (!("outputStream" in this))
-        throw "file not open for writing.";
+function fo_write(buf) {
+  if (!("outputStream" in this))
+    throw "file not open for writing.";
 
-    return this.outputStream.write(buf, buf.length);
+  return this.outputStream.write(buf, buf.length);
 }
 
 LocalFile.prototype.read =
-function fo_read(max)
-{
-    if (!("inputStream" in this))
-        throw "file not open for reading.";
+function fo_read(max) {
+  if (!("inputStream" in this))
+    throw "file not open for reading.";
 
-    var av = this.inputStream.available();
-    if (typeof max == "undefined")
-        max = av;
+  var av = this.inputStream.available();
+  if (typeof max == "undefined")
+    max = av;
 
-    if (!av)
-        return null;
+  if (!av)
+    return null;
 
-    var rv = this.inputStream.read(max);
-    return rv;
+  var rv = this.inputStream.read(max);
+  return rv;
 }
 
 LocalFile.prototype.close =
-function fo_close()
-{
-    if ("outputStream" in this)
-        this.outputStream.close();
-    if ("inputStream" in this)
-        this.inputStream.close();
+function fo_close() {
+  if ("outputStream" in this)
+    this.outputStream.close();
+  if ("inputStream" in this)
+    this.inputStream.close();
 }
 
-LocalFile.prototype.flush =
-function fo_close()
-{
-    return this.outputStream.flush();
+  LocalFile.prototype.flush =
+function fo_close() {
+  return this.outputStream.flush();
 }
 
 /**
@@ -382,37 +347,36 @@ function fo_close()
  * @param entryPath {string} the path of the file in the jar to write to
  * @param filePath {string} the path to the file that needs to be put in the jar
  */
-function writeFileToJar(jarFilePath, entryPath, filePath)
-{
-    const PR_RDONLY      = 0x01;
-    const PR_WRONLY      = 0x02;
-    const PR_RDWR        = 0x04;
-    const PR_CREATE_FILE = 0x08;
-    const PR_APPEND      = 0x10;
-    const PR_TRUNCATE    = 0x20;
-    const PR_SYNC        = 0x40;
-    const PR_EXCL        = 0x80;
+function writeFileToJar(jarFilePath, entryPath, filePath) {
+  const PR_RDONLY      = 0x01;
+  const PR_WRONLY      = 0x02;
+  const PR_RDWR        = 0x04;
+  const PR_CREATE_FILE = 0x08;
+  const PR_APPEND      = 0x10;
+  const PR_TRUNCATE    = 0x20;
+  const PR_SYNC        = 0x40;
+  const PR_EXCL        = 0x80;
 
-    var zipWriter = Components.Constructor("@mozilla.org/zipwriter;1", "nsIZipWriter");
-    var zipW = new zipWriter();
+  var zipWriter = Components.Constructor("@mozilla.org/zipwriter;1", "nsIZipWriter");
+  var zipW = new zipWriter();
 
-    var jarFile = nsLocalFile(jarFilePath);
-    zipW.open(jarFile, PR_RDWR);
-    if (zipW.hasEntry(entryPath))
-        zipW.removeEntry(entryPath, false);
-    zipW.addEntryFile(entryPath,
-                      Components.interfaces.nsIZipWriter.COMPRESSION_NONE, filePath, false);
-    zipW.close();
-    
-    // Now for some magic. Mozilla caches lots of stuff for JARs, so as to enable faster read/write.
-    // Unfortunately, that screws us over in this case, as it will have an open copy of a zipreader
-    // somewhere that's stuck with the old pointers to files in the JAR. If we don't fix this,
-    // lots of things break as they can't find the right files in the JAR anymore.
-    // So, we will find this zipreader, close it and reopen it. It will then re-read the
-    // zipfile, and will then work correctly. Hopefully.
-    var jarProtocolHandler = iosvc.getProtocolHandler("jar").QueryInterface(Components.interfaces.nsIJARProtocolHandler);
-    var jarCache = jarProtocolHandler.JARCache;
-    var ourReader = jarCache.getZip(jarFile);
-    ourReader.close();
-    ourReader.open(jarFile);
+  var jarFile = nsLocalFile(jarFilePath);
+  zipW.open(jarFile, PR_RDWR);
+  if (zipW.hasEntry(entryPath))
+    zipW.removeEntry(entryPath, false);
+  zipW.addEntryFile(entryPath,
+      Components.interfaces.nsIZipWriter.COMPRESSION_NONE, filePath, false);
+  zipW.close();
+
+  // Now for some magic. Mozilla caches lots of stuff for JARs, so as to enable faster read/write.
+  // Unfortunately, that screws us over in this case, as it will have an open copy of a zipreader
+  // somewhere that's stuck with the old pointers to files in the JAR. If we don't fix this,
+  // lots of things break as they can't find the right files in the JAR anymore.
+  // So, we will find this zipreader, close it and reopen it. It will then re-read the
+  // zipfile, and will then work correctly. Hopefully.
+  var jarProtocolHandler = iosvc.getProtocolHandler("jar").QueryInterface(Components.interfaces.nsIJARProtocolHandler);
+  var jarCache = jarProtocolHandler.JARCache;
+  var ourReader = jarCache.getZip(jarFile);
+  ourReader.close();
+  ourReader.open(jarFile);
 }
