@@ -97,7 +97,7 @@ function ct_getCellProperties(row, col)
 function ct_getRowProperties(row)
 {
   let rv = [];
-  if (col.id == "chromefilename" && this.displayData[row].isDirectory)
+  if (this.displayData[row].isDirectory)
     rv.push("isFolder");
   if (this.displayData[row].filtered)
   rv.push(this.displayData[row].filtered ? "filtered" : "unfiltered");
