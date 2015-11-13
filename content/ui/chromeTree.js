@@ -258,7 +258,12 @@ function ct_popupShowing(event)
   var isFile = (selectedItem.scheme == "file");
   var isJAR = (selectedItem.scheme == "jar");
   var isData = (selectedItem.scheme == "data");
-  var isAddon = (selectedItem.getAddOn() != getStr("not.an.addon")); 
+  let addonPromiseOrName = selectedItem.getAddon();
+  if (addonPromiseOrName.then) {
+    addonPromiseOrName.then(ct_updateItemsForAddonNess);
+  } else {
+    ct_updateItemsForAddonNess(addonPromiseOrName);
+  }
   document.getElementById("cx-copyjarurl").hidden = !isJAR;
   document.getElementById("cx-copyjarpath").hidden = !isJAR;
   document.getElementById("cx-copyfilepath").hidden = !isFile;
@@ -267,13 +272,17 @@ function ct_popupShowing(event)
   // Can't launch jar files (yet):
   document.getElementById("cx-launch").hidden = !isFile;
   document.getElementById("cx-launch-sep").hidden = !isFile; 
-  // Show add-on folder only for add-ons:
-  document.getElementById("cx-show-sep").hidden = !isAddon;
-  document.getElementById("cx-show-manifest").hidden = !isAddon;
 
   //document.getElementById("cx-copycontent").setAttribute("disabled", isDir);
   //document.getElementById("cx-copycontentdata").setAttribute("disabled", isDir);
   return true;
+}
+
+function ct_updateItemsForAddonNess(name) {
+  // Show add-on folder only for add-ons:
+  var isAddon = (name != getStr("not.an.addon")); 
+  document.getElementById("cx-show-sep").hidden = !isAddon;
+  document.getElementById("cx-show-manifest").hidden = !isAddon;
 }
 
 function ct_getCurrentHref()

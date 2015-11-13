@@ -17,7 +17,6 @@ const FirefoxUUID = "{ec8030f7-c20a-464f-9b0e-13a3a9e97384}";
 const XHTML_NS = "http://www.w3.org/1999/xhtml";
 
 XPCOMUtils.defineLazyServiceGetter(this, "chromeReg", "@mozilla.org/chrome/chrome-registry;1", "nsIToolkitChromeRegistry");
-XPCOMUtils.defineLazyServiceGetter(this, "extManager", "@mozilla.org/extensions/manager;1", "nsIExtensionManager");
 XPCOMUtils.defineLazyServiceGetter(this, "atomsvc", "@mozilla.org/atom-service;1", "nsIAtomService");
 XPCOMUtils.defineLazyServiceGetter(this, "protosvc", "@mozilla.org/uriloader/external-protocol-service;1", "nsIExternalProtocolService");
 

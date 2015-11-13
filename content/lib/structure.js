@@ -135,7 +135,7 @@ function cd_getManifest() {
 }
 
 ChromeDirectory.prototype._addon = "";
-ChromeDirectory.prototype.getAddOn =
+ChromeDirectory.prototype.getAddon =
 function cd_getAddOn() {
   if (this._addon)
     return this._addon;
@@ -143,21 +143,15 @@ function cd_getAddOn() {
   var manifestURL = getURLSpecFromFile(this.getManifest());
   var id;
   var m = manifestURL.match(/\/([^\/]+)\/chrome.manifest$/);
-  if (!m)
-  {
+  if (!m) {
     this._addon = getStr("not.an.addon");
-  }
-  else
-  {
-    id = m[1];
-    try {
-      this._addon = extManager.getItemForID(decodeURIComponent(id)).name;
-    }
-    catch (ex)
-    {
-      logException(ex);
-      this._addon = getStr("addon.not.found");
-    }
+  } else {
+    this._addon = new Promise(resolve => {
+      AddonManager.getAddon(decodeURIComponent(id), function(addon) {
+        this._addon = addon ? addon.name : getStr("addon.not.found");
+        resolve(this._addon);
+      }.bind(this));
+    });
   }
   return this._addon;
 }
@@ -203,5 +197,5 @@ function cf_getManifest() {
 // Same as for directories
 ChromeFile.prototype.getPath = ChromeDirectory.prototype.getPath;
 ChromeFile.prototype._addon = "";
-ChromeFile.prototype.getAddOn = ChromeDirectory.prototype.getAddOn;
+ChromeFile.prototype.getAddon = ChromeDirectory.prototype.getAddon;
 ///////////////////

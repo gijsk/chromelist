@@ -22,5 +22,15 @@ function onLoad()
   else
     flags = file.flags;
   document.getElementById("flags-text").value = flags;
-  document.getElementById("addon-text").value = file.getAddOn();
+  let addon = file.getAddon();
+  if (addon.then) {
+    addon.then(setAddonName);
+  } else {
+    setAddonName(addon);
+  }
 }
+
+function setAddonName(name) {
+  document.getElementById("addon-text").value = name;
+}
+

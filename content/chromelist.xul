@@ -6,7 +6,7 @@
         title="&window.title;"
         id="chrome-browser-window"
         orient="vertical"
-        onload="setTimeout('onLoad()', 10)"
+        onload="onLoad()"
         onunload="onUnload()"
         width="640"
         height="480"

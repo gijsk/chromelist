@@ -228,7 +228,7 @@ function updateOverrides(chromeStructure, overrides, onlyOverrides)
     }
   }
   if (!onlyOverrides) {
-    setTimeout(updateFlags, 0, chromeStructure);
+    updateFlags(chromeStructure);
   }
 }
 
@@ -380,7 +380,7 @@ function updateFlags(chromeStructure)
       otherProvs.forEach(function(x) x.flags += addedFlags);
     }
   }
-  setTimeout(finalCallbackFunction, 0);
+  Promise.resolve().then(finalCallbackFunction);
 }
 
 /**
