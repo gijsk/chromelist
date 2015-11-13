@@ -300,7 +300,7 @@ function overrideJar(chromeStructure, overridden, override, expectedURI, manifes
     }
     catch (ex)
     {
-      var desc = getStr("problem.override.fileNotInJar", [overridden, override]);
+      desc = getStr("problem.override.fileNotInJar", [overridden, override]);
       prob = {desc: desc, manifest: manifest, severity: "error"};
       chromeBrowser.addProblem(prob);
       return;
@@ -418,12 +418,13 @@ function addSubs(chromeStructure, cDir)
  */
 function chromeChildrenGenerator(chromeStructure, cDir)
 {
+  let desc;
   try {
     var realURL = getRealURI(cDir.href);
   }
   catch (ex)
   {
-    var desc = getStr("problem.convertChromeURL.failure", cDir.href);
+    desc = getStr("problem.convertChromeURL.failure", cDir.href);
     var prob = {desc: desc, manifest: cDir.manifest, severity: "error"};
     chromeBrowser.addProblem(prob);
     return;
@@ -444,7 +445,7 @@ function chromeChildrenGenerator(chromeStructure, cDir)
   }
   else
   {
-    var desc = getStr("problem.unrecognized.url", [cDir.href, realURL.spec]);
+    desc = getStr("problem.unrecognized.url", [cDir.href, realURL.spec]);
     prob = {desc: desc, manifest: cDir.manifest, severity: "error"};
     chromeBrowser.addProblem(prob);
   }

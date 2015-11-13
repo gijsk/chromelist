@@ -116,7 +116,6 @@ function ct_getImageSrc(row, column)
   if (row == -1)
     return "";
   if (column.id == "chromefilename" && this.data[row].icon) {
-    console.log(this.data[row].href, this.data[row].icon);
     return this.data[row].icon;
   }
   return "";
@@ -152,8 +151,6 @@ function ct_sort() {
     if (typeof rowObject.extension == "undefined") {
       rowObject.extension = this.getExtension(rowObject.leafName);
     }
-    console.dir(rowObject);
-    console.dir(origData);
   }
 
   if (document.getElementById('chromefilename').getAttribute("sortDirection") &&
