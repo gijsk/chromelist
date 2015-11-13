@@ -2,10 +2,6 @@
 <RDF:RDF xmlns:em="http://www.mozilla.org/2004/em-rdf#"
          xmlns:NC="http://home.netscape.com/NC-rdf#"
          xmlns:RDF="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
-  <RDF:Description RDF:about="urn:mozilla:extension:file:chrome"
-                   em:package="content"
-                   em:skin="skin"
-                   em:locale="locale" />
   <RDF:Description RDF:about="urn:mozilla:install-manifest"
                    em:id="chromelist@extensions.gijsk.com"
                    em:name="Chrome List"
@@ -13,19 +9,18 @@
                    em:description="Lets you take a peek at the files under the hood of your application and add-ons."
                    em:creator="Gijs Kruitbosch"
                    em:homepageURL="http://www.gijsk.com/">
-    <em:file RDF:resource="urn:mozilla:extension:file:chrome"/>
     <em:contributor>Brett Zamir</em:contributor>
     <em:targetApplication>
         <Description>
             <em:id>{ec8030f7-c20a-464f-9b0e-13a3a9e97384}</em:id>
-            <em:minVersion>42</em:minVersion>
+            <em:minVersion>42.0</em:minVersion>
             <em:maxVersion>45.0a1</em:maxVersion>
         </Description>
     </em:targetApplication>
     <em:targetApplication>
         <Description>
             <em:id>toolkit@mozilla.org</em:id>
-            <em:minVersion>42</em:minVersion>
+            <em:minVersion>42.0</em:minVersion>
             <em:maxVersion>45.0a1</em:maxVersion>
         </Description>
     </em:targetApplication>
