@@ -282,12 +282,12 @@ function cb_viewInTab(href) {
 
 chromeBrowser.launch =
 function cb_launch(item) {
-  (new FileRef(item.path)).launch();
+  (new LocalFile(item.path)).launch();
 }
 
-chromeBrowser.showManifest =
-function cb_showManifest(item) {
-  (new FileRef(item.path)).reveal();
+chromeBrowser.showOnDisk =
+function cb_showOnDisk(item) {
+  (new LocalFile(item.path)).reveal();
 }
 
 chromeBrowser.refresh =

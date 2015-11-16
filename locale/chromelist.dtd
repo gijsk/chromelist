@@ -34,8 +34,8 @@
 <!ENTITY     cx.launch.accesskey            "L">
 <!ENTITY     cx.view-source                 "View Source">
 <!ENTITY     cx.view-source.accesskey       "S">
-<!ENTITY     cx.show-manifest               "Add-On Folder">
-<!ENTITY     cx.show-manifest.accesskey     "M">
+<!ENTITY     cx.show-on-disk                "Show on disk">
+<!ENTITY     cx.show-on-disk.accesskey      "d">
 <!ENTITY     cx.refresh                     "Refresh">
 <!ENTITY     cx.refresh.accesskey           "R">
 
