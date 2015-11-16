@@ -18,7 +18,7 @@ function onLoad() {
 
   chromeBrowser.init();
   setStatusText(getStr("info.status.reading.manifests"));
-  setTimeout(refreshChromeList, 0, chromeBrowser.chromeStructure, onLoadDone);
+  Promise.resolve().then(() => refreshChromeList(chromeBrowser.chromeStructure, onLoadDone));
 }
 
 // Basically finishes starting up after we've done all the background loading
