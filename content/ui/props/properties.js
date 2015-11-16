@@ -14,7 +14,10 @@ function onLoad()
     document.getElementById("file-size").hidden = true;
   else
     document.getElementById("file-size-text").value = getFormattedBytes(file.size);
-  document.getElementById("manifest-text").value = file.getManifest();
+  let manifestURI = file.getManifestURI();
+  if (manifestURI) {
+    document.getElementById("manifest-text").value = manifestURI.spec;
+  }
 
   var flags;
   if (file.TYPE == "ChromeFile")

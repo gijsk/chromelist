@@ -101,7 +101,7 @@ function cb_showProblems() {
 
 chromeBrowser.addProblem =
 function cb_addProblem(problem) {
-  var error = chromeError(problem.desc, problem.manifest, problem.severity);
+  var error = chromeError(problem.desc, problem.manifestURI, problem.severity);
   Services.console.logMessage(error);
   this.foundProblems = true;
 }
@@ -471,7 +471,7 @@ function chromeError(message, file, severity) {
   if (severity == "warning")
     flags = Ci.nsIScriptError.warningFlag;
 
-  scriptError.init(message, file, null, null, null, flags, null);
+  scriptError.init(message, (file && file.spec) || null, null, null, null, flags, null);
   return scriptError;
 }
 

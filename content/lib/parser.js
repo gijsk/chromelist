@@ -64,13 +64,13 @@ function makeChromeTree([chromeStructure, chromeURLs]) {
   Task.spawn(function() {
     for (let i = 0; i < chromeURLs.length; i++) {
       // Expand our stored items:
-      let [chromeURI, manifest, flags] = chromeURLs[i];
+      let [chromeURI, manifestURI, flags] = chromeURLs[i];
       // Extract base and package:
       let matches = chromeURI.match(/^chrome\:\/\/([^\/]+)\/([^\/]+)/i);
       let packagename = matches[1]; // Packagename
       let providertype = matches[2]; // Packagetype
       // Get the ChromeDirectory represented:
-      let cDir = getProviderDir(chromeStructure, packagename, providertype, manifest, flags);
+      let cDir = getProviderDir(chromeStructure, packagename, providertype, manifestURI, flags);
       // Find all the stuff underneath:
       addSubs(chromeStructure, cDir);
 
@@ -89,16 +89,16 @@ function makeChromeTree([chromeStructure, chromeURLs]) {
   });
 }
 
-function getProviderDir(chromeStructure, packageName, providerType, manifest, flags) {
+function getProviderDir(chromeStructure, packageName, providerType, manifestURI, flags) {
   var dir;
   if (!(packageName in chromeStructure.directories))
   {
-    dir = new ChromeDirectory(chromeStructure, packageName, manifest);
+    dir = new ChromeDirectory(chromeStructure, packageName, manifestURI);
     chromeStructure.directories[packageName] = dir;
   }
 
   dir = new ChromeDirectory(chromeStructure.directories[packageName],
-      providerType, manifest, flags);
+      providerType, manifestURI, flags);
   chromeStructure.directories[packageName].directories[providerType] = dir;
   return chromeStructure.directories[packageName].directories[providerType];
 }
@@ -119,10 +119,10 @@ function getManifests() {
 }
 
 // Parse a manifest.
-function parseManifest(chromeStructure, manifestContents, path, manifestList)
+function parseManifest(chromeStructure, manifestContents, manifestURI, manifestList)
 {
   var line, params, flags, rv = [];
-  var uriForManifest = path;
+  var uriForManifest = manifestURI;
   // Pick apart the manifest line by line.
   var lines = manifestContents.split("\n");
   for (var i = 0; i < lines.length; i++)
@@ -140,7 +140,7 @@ function parseManifest(chromeStructure, manifestContents, path, manifestList)
       case "content":
       case "skin":
       case "locale":
-        // elem looks like: [chrome uri, path to manifest, flags (if any)]
+        // elem looks like: [chrome uri, uri to manifest, flags (if any)]
         flags = "";
         if (params[0] == "content")
           flags = params.slice(3).join(" ");
@@ -148,7 +148,7 @@ function parseManifest(chromeStructure, manifestContents, path, manifestList)
           flags = params.slice(4).join(" ");
         else if (params[0] == "locale")
           flags = params.slice(4).join(" ");
-        rv.push(["chrome://" + params[1] + "/" + params[0], path, flags]);
+        rv.push(["chrome://" + params[1] + "/" + params[0], manifestURI, flags]);
         break;
       case "override":
         if (params.length >= 3) {
@@ -158,9 +158,9 @@ function parseManifest(chromeStructure, manifestContents, path, manifestList)
           } catch(ex) {}
           flags = params.slice(3).join(" ");
           if (resolvedURI)
-            chromeStructure.overrides.push([params[1], resolvedURI.spec, path, flags]);
+            chromeStructure.overrides.push([params[1], resolvedURI.spec, manifestURI, flags]);
           else
-            chromeStructure.overrides.push([params[1], params[2], path, flags]);
+            chromeStructure.overrides.push([params[1], params[2], manifestURI, flags]);
         }
         break;
       case "manifest":
@@ -181,7 +181,7 @@ function parseManifest(chromeStructure, manifestContents, path, manifestList)
 
 function updateOverrides(chromeStructure, overrides, onlyOverrides)
 {
-  var overridden, override, manifest, flags, overriddenURI, expectedURI, overrideURI
+  var overridden, override, manifestURI, flags, overriddenURI, expectedURI, overrideURI
   var prob, desc;
   var chromeOverrides = overrides;
   if (!chromeOverrides)
@@ -190,7 +190,7 @@ function updateOverrides(chromeStructure, overrides, onlyOverrides)
   for (var i = 0; i < chromeOverrides.length; i++) {
     overridden = chromeOverrides[i][0];
     override = chromeOverrides[i][1];
-    manifest = chromeOverrides[i][2];
+    manifestURI = chromeOverrides[i][2];
     flags = chromeOverrides[i][3];
     overriddenURI = Services.io.newURI(overridden, null, null);
     try {
@@ -201,28 +201,28 @@ function updateOverrides(chromeStructure, overrides, onlyOverrides)
     if ((!expectedURI || (expectedURI.spec != overrideURI.spec)) && flags == "")
     {
       desc = getStr("problem.override.notApplied", [overridden, override]);
-      prob = {desc: desc, manifest: manifest, severity: "warning"};
+      prob = {desc: desc, manifestURI: manifestURI, severity: "warning"};
       chromeBrowser.addProblem(prob);
     }
     else // OK, this thing got applied. Do stuff:
     {
       if (expectedURI.scheme == "file")
       {
-        overrideFile(chromeStructure, overridden, override, expectedURI, manifest);
+        overrideFile(chromeStructure, overridden, override, expectedURI, manifestURI);
       }
       else if (expectedURI.scheme == "jar")
       {
-        overrideJar(chromeStructure, overridden, override, expectedURI, manifest);
+        overrideJar(chromeStructure, overridden, override, expectedURI, manifestURI);
       }
       else if (expectedURI.scheme == "data")
       {
-        overrideData(chromeStructure, overridden, override, expectedURI, manifest);
+        overrideData(chromeStructure, overridden, override, expectedURI, manifestURI);
       }
       else
       {
         desc = getStr("problem.override.unrecognized.url",
             [overridden, override]);
-        prob = {desc: desc, manifest: manifest, severity: "error"};
+        prob = {desc: desc, manifestURI: manifestURI, severity: "error"};
         chromeBrowser.addProblem(prob);
       }
     }
@@ -232,14 +232,14 @@ function updateOverrides(chromeStructure, overrides, onlyOverrides)
   }
 }
 
-function overrideFile(chromeStructure, overridden, override, expectedURI, manifest)
+function overrideFile(chromeStructure, overridden, override, expectedURI, manifestURI)
 {
   var desc, prob, f = getFileFromURLSpec(expectedURI.spec);
   // The file needs to exist.
   if (!f || !f.exists())
   {
     desc = getStr("problem.override.pathDoesNotExist", [overridden, override]);
-    prob = {desc: desc, manifest: manifest, severity: "error"};
+    prob = {desc: desc, manifestURI: manifestURI, severity: "error"};
     chromeBrowser.addProblem(prob);
     return;
   }
@@ -247,7 +247,7 @@ function overrideFile(chromeStructure, overridden, override, expectedURI, manife
   if (f.isDirectory())
   {
     desc = getStr("problem.override.isDir", [overridden, override]);
-    prob = {desc: desc, manifest: manifest, severity: "warning"};
+    prob = {desc: desc, manifestURI: manifestURI, severity: "warning"};
     chromeBrowser.addProblem(prob);
     return;
   }
@@ -258,11 +258,11 @@ function overrideFile(chromeStructure, overridden, override, expectedURI, manife
   }
   catch (ex) { fileSize = 0; }
 
-  addOverride(chromeStructure, overridden, override, manifest, "file", fileSize);
+  addOverride(chromeStructure, overridden, override, manifestURI, "file", fileSize);
   return;
 }
 
-function overrideJar(chromeStructure, overridden, override, expectedURI, manifest)
+function overrideJar(chromeStructure, overridden, override, expectedURI, manifestURI)
 {
   let desc, prob;
   try {
@@ -273,7 +273,7 @@ function overrideJar(chromeStructure, overridden, override, expectedURI, manifes
     } catch (ex) {
       if (ex && ex.result && ex.result == Cr.NS_ERROR_FILE_TARGET_DOES_NOT_EXIST) {
         desc = getStr("problem.override.noJarFile", [overridden, override]);
-        prob = {desc: desc, manifest: manifest, severity: "error"};
+        prob = {desc: desc, manifestURI: manifestURI, severity: "error"};
         chromeBrowser.addProblem(prob);
       }
       throw ex; // Fall through to final catch block below
@@ -286,7 +286,7 @@ function overrideJar(chromeStructure, overridden, override, expectedURI, manifes
     if (path[path.length - 1] == "/")
     {
       desc = getStr("problem.override.isDir", [overridden, override]);
-      prob = {desc: desc, manifest: manifest, severity: "error"};
+      prob = {desc: desc, manifestURI: manifestURI, severity: "error"};
       chromeBrowser.addProblem(prob);
       return;
     }
@@ -301,7 +301,7 @@ function overrideJar(chromeStructure, overridden, override, expectedURI, manifes
     catch (ex)
     {
       desc = getStr("problem.override.fileNotInJar", [overridden, override]);
-      prob = {desc: desc, manifest: manifest, severity: "error"};
+      prob = {desc: desc, manifestURI: manifestURI, severity: "error"};
       chromeBrowser.addProblem(prob);
       return;
     }
@@ -315,25 +315,25 @@ function overrideJar(chromeStructure, overridden, override, expectedURI, manifes
     catch (ex) { fileSize = 0; }
 
     // Do it:
-    addOverride(chromeStructure, overridden, override, manifest, "jar", fileSize);
+    addOverride(chromeStructure, overridden, override, manifestURI, "jar", fileSize);
   }
   catch (ex)
   {
     // Uh oh.
     desc = getStr("problem.override.jarFailure", [overridden, override, ex]);
-    prob = {desc: desc, manifest: manifest, severity: "warning"};
+    prob = {desc: desc, manifestURI: manifestURI, severity: "warning"};
     chromeBrowser.addProblem(prob);
     return;
   }
 }
 
-function overrideData(chromeStructure, overridden, override, expectedURI, manifest)
+function overrideData(chromeStructure, overridden, override, expectedURI, manifestURI)
 {
   var size = expectedURI.spec.replace(/^data:[^,]*,/, "").length;
-  addOverride(chromeStructure, overridden, override, manifest, "data", size);
+  addOverride(chromeStructure, overridden, override, manifestURI, "data", size);
 }
 
-function addOverride(chromeStructure, overridden, override, manifest, scheme, size)
+function addOverride(chromeStructure, overridden, override, manifestURI, scheme, size)
 {
   // Alright. Get stuff.
   var chromeThingy = chromeStructure.findURL(overridden);
@@ -352,7 +352,7 @@ function addOverride(chromeStructure, overridden, override, manifest, scheme, si
     chromeThingy.parent.files[chromeThingy.leafName] = chromeThingy;
   }
   chromeThingy.size = size;
-  chromeThingy.manifest = manifest;
+  chromeThingy.manifestURI = manifestURI;
   chromeThingy.scheme = scheme;
   chromeThingy.resolvedURI = override;
   return;
@@ -425,7 +425,7 @@ function chromeChildrenGenerator(chromeStructure, cDir)
   catch (ex)
   {
     desc = getStr("problem.convertChromeURL.failure", cDir.href);
-    var prob = {desc: desc, manifest: cDir.manifest, severity: "error"};
+    var prob = {desc: desc, manifestURI: cDir.manifestURI, severity: "error"};
     chromeBrowser.addProblem(prob);
     return;
   }
@@ -446,7 +446,7 @@ function chromeChildrenGenerator(chromeStructure, cDir)
   else
   {
     desc = getStr("problem.unrecognized.url", [cDir.href, realURL.spec]);
-    prob = {desc: desc, manifest: cDir.manifest, severity: "error"};
+    prob = {desc: desc, manifestURI: cDir.manifestURI, severity: "error"};
     chromeBrowser.addProblem(prob);
   }
 
@@ -470,13 +470,13 @@ function jarChildrenGenerator(chromeStructure, cDir, realURL)
     if (ex && ex.result) {
       if (ex.result == Components.results.NS_ERROR_FILE_TARGET_DOES_NOT_EXIST) {
         desc = getStr("problem.fileNotInJar", [cDir.href, realURL.spec]);
-        prob = {desc: desc, manifest: cDir.manifest, severity: "error",
+        prob = {desc: desc, manifestURI: cDir.manifestURI, severity: "error",
           url: cDir.href, flags: cDir.flags};
         // FIXME document!
         chromeBrowser.addPossibleProblem(prob);
       } else if (ex.result == Components.results.NS_ERROR_FILE_NOT_FOUND) {
         desc = getStr("problem.noJarFile", [cDir.href, realURL.spec]);
-        prob = {desc: desc, manifest: cDir.manifest, severity: "error",
+        prob = {desc: desc, manifestURI: cDir.manifestURI, severity: "error",
           url: cDir.href, flags: cDir.flags};
         chromeBrowser.addProblem(prob);
         delete cDir.parent.directories[cDir.leafName];
@@ -513,7 +513,7 @@ function fileChildrenGenerator(chromeStructure, cDir, realURL)
   if (!f.exists())
   {
     desc = getStr("problem.noFile", [cDir.href, f.path]);
-    prob = {desc: desc, manifest: cDir.manifest, severity: "error",
+    prob = {desc: desc, manifestURI: cDir.manifestURI, severity: "error",
       url: cDir.href, flags: cDir.flags};
     chromeBrowser.addPossibleProblem(prob);
     return;
@@ -521,7 +521,7 @@ function fileChildrenGenerator(chromeStructure, cDir, realURL)
   if (!f.isDirectory())
   {
     desc = getStr("problem.mappedToFile", [cDir.href, f.path]);
-    prob = {desc: desc, manifest: cDir.manifest, severity: "error"};
+    prob = {desc: desc, manifestURI: cDir.manifestURI, severity: "error"};
     chromeBrowser.addProblem(prob);
     return;
   }
@@ -538,7 +538,7 @@ function fileChildrenGenerator(chromeStructure, cDir, realURL)
   if ((cDir.level == 2) && empty)
   {
     desc = getStr("problem.mappedToEmptyDir", [cDir.href, f.path]);
-    prob = {desc: desc, manifest: cDir.manifest, severity: "warning"};
+    prob = {desc: desc, manifestURI: cDir.manifestURI, severity: "warning"};
     chromeBrowser.addProblem(prob);
   }
   return;

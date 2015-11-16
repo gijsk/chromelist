@@ -83,7 +83,7 @@ function matchesExpression(obj, expr) {
 // ChromeDirectory
 // Constructor
 // Note: name is expected to be URI-encoded
-function ChromeDirectory(someParent, name, manifest, flags) {
+function ChromeDirectory(someParent, name, manifestURI, flags) {
   this.parent = someParent;
   this.href = this.parent.href + name + "/";
   this.level = this.parent.level + 1;
@@ -103,10 +103,10 @@ function ChromeDirectory(someParent, name, manifest, flags) {
   this.directories = new Object();
   this.files = new Object();
   // And we need to store the manifest used to register this:
-  if (manifest)
-    this.manifest = manifest;
+  if (manifestURI)
+    this.manifestURI = manifestURI;
   else
-    this.manifest = this.parent.manifest;
+    this.manifestURI = this.parent.manifestURI;
 
   // And the flags:
   if (flags)
@@ -129,9 +129,9 @@ function cd_getPath() {
   return path;
 };
 
-ChromeDirectory.prototype.getManifest =
-function cd_getManifest() {
-  return this.manifest;
+ChromeDirectory.prototype.getManifestURI =
+function cd_getManifestURI() {
+  return this.manifestURI;
 }
 
 ChromeDirectory.prototype._addon = "";
@@ -140,15 +140,30 @@ function cd_getAddOn() {
   if (this._addon)
     return this._addon;
 
-  var manifestURL = getURLSpecFromFile(this.getManifest());
-  var id;
-  var m = manifestURL.match(/\/([^\/]+)\/chrome.manifest$/);
+  let manifestURI = this.getManifestURI();
+  if (!manifestURI) {
+    return null;
+  }
+
+  let jarFileOrFile;
+  if (manifestURI instanceof Ci.nsIJARURI) {
+    manifestURI.QueryInterface(Ci.nsIJARURI);
+    let jarFileURI = manifestURI.JARFile;
+    let jarFile = getFileFromURLSpec(jarFileURI.spec);
+    let appDir = Services.dirsvc.get("GreD", Ci.nsIFile);
+    if (appDir.contains(jarFile) && jarFile.leafName == "omni.ja") {
+      return getStr("not.an.addon");
+    }
+  }
+
+  var m = manifestURI.spec.match(/\/([^\/]+)\/chrome.manifest$/);
   if (!m) {
     this._addon = getStr("not.an.addon");
   } else {
+    let id = m[1].replace(/\.xpi!$/gi, "");
     this._addon = new Promise(resolve => {
-      AddonManager.getAddon(decodeURIComponent(id), function(addon) {
-        this._addon = addon ? addon.name : getStr("addon.not.found");
+      AddonManager.getAddonByID(decodeURIComponent(id), function(addon) {
+        this._addon = addon ? addon.name : getStr("addon.not.found", [id]);
         resolve(this._addon);
       }.bind(this));
     });
@@ -182,16 +197,16 @@ function ChromeFile(parent, name, size) {
 ChromeFile.prototype.TYPE = "ChromeFile";
 ChromeFile.prototype.parent = null;
 ChromeFile.prototype.isDirectory = false;
-ChromeFile.prototype.getManifest =
-function cf_getManifest() {
+ChromeFile.prototype.getManifestURI =
+function cf_getManifestURI() {
   var obj = this;
-  while (!("manifest" in obj))
+  while (!("manifestURI" in obj))
   {
     if (obj.TYPE == "ChromeStructure")
       return null;
     obj = obj.parent;
   }
-  return obj.manifest;
+  return obj.manifestURI;
 }
 
 // Same as for directories
