@@ -330,7 +330,7 @@ function cb_copy(item, prop) {
   if (!item || !(prop in item))
     return;
 
-  Services.clipboard.copyString(item[prop]);
+  ClipboardHelper.copyString(item[prop]);
 }
 
 // Save stuff.

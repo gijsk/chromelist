@@ -19,6 +19,7 @@ const XHTML_NS = "http://www.w3.org/1999/xhtml";
 XPCOMUtils.defineLazyServiceGetter(this, "chromeReg", "@mozilla.org/chrome/chrome-registry;1", "nsIToolkitChromeRegistry");
 XPCOMUtils.defineLazyServiceGetter(this, "atomsvc", "@mozilla.org/atom-service;1", "nsIAtomService");
 XPCOMUtils.defineLazyServiceGetter(this, "protosvc", "@mozilla.org/uriloader/external-protocol-service;1", "nsIExternalProtocolService");
+XPCOMUtils.defineLazyServiceGetter(this, "ClipboardHelper", "@mozilla.org/widget/clipboardhelper;1", "nsIClipboardHelper");
 
 let ZipReader = Components.Constructor("@mozilla.org/libjar/zip-reader;1", "nsIZipReader", "open");
 let NestedZipReader = Components.Constructor("@mozilla.org/libjar/zip-reader;1", "nsIZipReader", "openInner");
