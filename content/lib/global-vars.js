@@ -21,6 +21,8 @@ XPCOMUtils.defineLazyServiceGetter(this, "atomsvc", "@mozilla.org/atom-service;1
 XPCOMUtils.defineLazyServiceGetter(this, "protosvc", "@mozilla.org/uriloader/external-protocol-service;1", "nsIExternalProtocolService");
 XPCOMUtils.defineLazyServiceGetter(this, "ClipboardHelper", "@mozilla.org/widget/clipboardhelper;1", "nsIClipboardHelper");
 
+XPCOMUtils.defineLazyModuleGetter(this, "AddonManager", "resource://gre/modules/AddonManager.jsm");
+
 let ZipReader = Components.Constructor("@mozilla.org/libjar/zip-reader;1", "nsIZipReader", "open");
 let NestedZipReader = Components.Constructor("@mozilla.org/libjar/zip-reader;1", "nsIZipReader", "openInner");
 let LocalFile = Components.Constructor("@mozilla.org/file/local;1", "nsILocalFile", "initWithPath");
