@@ -220,13 +220,13 @@ function writeFileToJar(jarFilePath, entryPath, filePath) {
       Components.interfaces.nsIZipWriter.COMPRESSION_NONE, filePath, false);
   zipW.close();
 
-  // Now for some magic. Mozilla caches lots of stuff for JARs, so as to enable faster read/write.
+  // Now for some magic. Gecko caches lots of stuff for JARs, so as to enable faster read/write.
   // Unfortunately, that screws us over in this case, as it will have an open copy of a zipreader
   // somewhere that's stuck with the old pointers to files in the JAR. If we don't fix this,
   // lots of things break as they can't find the right files in the JAR anymore.
   // So, we will find this zipreader, close it and reopen it. It will then re-read the
   // zipfile, and will then work correctly. Hopefully.
-  var jarProtocolHandler = iosvc.getProtocolHandler("jar").QueryInterface(Components.interfaces.nsIJARProtocolHandler);
+  var jarProtocolHandler = Services.io.getProtocolHandler("jar").QueryInterface(Components.interfaces.nsIJARProtocolHandler);
   var jarCache = jarProtocolHandler.JARCache;
   var ourReader = jarCache.getZip(jarFile);
   ourReader.close();
