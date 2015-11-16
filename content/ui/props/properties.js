@@ -2,7 +2,7 @@ var file = null;
 function onLoad()
 {
   file = window.arguments[0];
-  document.title = document.title + file.leafName;
+  document.title = getStr("props.title", [file.leafName]);
   document.getElementById("chrome-url-text").value = file.href;
   document.getElementById("resolved-url-text").value = file.resolvedURI;
   document.getElementById("resolved-file-text").value = file.path; 

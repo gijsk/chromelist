@@ -245,17 +245,21 @@ function getFormattedBytes(bytes) {
     ary.unshift(strBytes.substr(-3));
     strBytes = strBytes.slice(0, -3);
   }
-  return ary.join(".") + " " + getStr("props.bytes") + " " + getShortBytes(bytes);
+  let shortBytes = getShortBytes(bytes);
+  if (!shortBytes) {
+    return getStr("props.bytes.noshort", ary.join("."));
+  }
+  return getStr("props.bytes", [ary.join(".")].concat(shortBytes));
 }
 
 function getShortBytes(bytes) {
   if (bytes < 1024)
-    return "";
+    return null
   var labels = ["KiB", "MiB", "GiB", "TiB"], i = -1;
   while (bytes > 1024) {
     bytes /= 1024;
     i++;
   }
-  return "(" + bytes.toFixed(2) + " " + labels[i] + ")" ;
+  return [bytes.toFixed(2), labels[i]];
 }
 
