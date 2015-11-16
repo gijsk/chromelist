@@ -340,7 +340,7 @@ function cb_saveAs(href) {
     alert("Couldn't get the URL for this file... sorry!");
     return;
   }
-  saveURL(href, null, null, false, false, null);
+  saveURL(href, null, null, false, false, null, document, false);
 }
 
 chromeBrowser.replace =
