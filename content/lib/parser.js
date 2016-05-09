@@ -376,8 +376,8 @@ function updateFlags(chromeStructure)
       var xnw = flags.match(/xpcnativewrappers=(?:yes|no)/);
       var addedFlags = p ? p[0] : "";
       addedFlags += " " + (xnw ? xnw[0] : "");
-      var otherProvs = [pack.directories[d] for (d in pack.directories) if (d != "content")];
-      otherProvs.forEach(function(x) x.flags += addedFlags);
+      var otherProvs = Object.keys(pack.directories).filter(d => d != "content").map(d => pack.directories[d]);
+      otherProvs.forEach(function(x) { x.flags += addedFlags; });
     }
   }
   Promise.resolve().then(finalCallbackFunction);
