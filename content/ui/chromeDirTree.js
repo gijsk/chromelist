@@ -112,7 +112,7 @@ function cdt_toggleOpenState(row) {
     // Okay, this node was closed, we open it, we need to add the children.
     for (var x = this.data[row].children.length - 1; x >= 0; --x) {
       let newRow = this.data[row].children[x];
-      newRow.filtered = newRow.orig.filtered && newRow.orig.filtered.indexOf(expr) > -1;
+      newRow.filtered = newRow.orig.filtered && newRow.orig.filtered.indexOf(this._expr) > -1;
       this.data.splice(row + 1, 0, newRow);
     }
 
