@@ -89,14 +89,9 @@ function cb_initAppCompat() {
 
 chromeBrowser.showProblems =
 function cb_showProblems() {
-  var existingWindow = getWindowByType("global:console");
-  if (existingWindow) {
-    existingWindow.focus();
-    return;
-  }
-
-  var windowArgs = "chrome,extrachrome,menubar,resizable,scrollbars,status,toolbar";
-  window.open("chrome://global/content/console.xul", "_blank", windowArgs);
+  const {devtools} = Cu.import("resource://devtools/shared/Loader.jsm", {});
+  let HUDService = devtools.require("devtools/client/webconsole/hudservice");
+  HUDService.openBrowserConsoleOrFocus();
 }
 
 chromeBrowser.addProblem =
